@@ -607,14 +607,16 @@ def build_agent_brief_document(template_path: Path, output_path: Path, spec_path
         font_size_pt=14,
     )
     add_blank(document, body_style, 3)
-    add_paragraph(document, body_style, "Тема работы: [вписать точную тему]", alignment="left", first_line_indent_cm=None, bold=True)
-    add_paragraph(document, body_style, "Тип работы: [ВКР / курсовая работа / дипломный проект / пояснительная записка]", alignment="left", first_line_indent_cm=None)
-    add_paragraph(document, body_style, "Образовательная организация: [вписать название]", alignment="left", first_line_indent_cm=None)
-    add_paragraph(document, body_style, "Кафедра / отделение: [вписать]", alignment="left", first_line_indent_cm=None)
-    add_paragraph(document, body_style, "Автор: [ФИО]", alignment="left", first_line_indent_cm=None)
-    add_paragraph(document, body_style, "Руководитель: [ФИО]", alignment="left", first_line_indent_cm=None)
-    add_paragraph(document, body_style, "Группа: [номер группы]", alignment="left", first_line_indent_cm=None)
-    add_paragraph(document, body_style, "Год: [год оформления]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Тема работы: [ТЕМА РАБОТЫ]", alignment="left", first_line_indent_cm=None, bold=True)
+    add_paragraph(document, body_style, "Тип работы: [ВКР / ДИПЛОМНЫЙ ПРОЕКТ / ПОЯСНИТЕЛЬНАЯ ЗАПИСКА]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Образовательная организация: [НАЗВАНИЕ ВУЗА / КОЛЛЕДЖА]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Институт / факультет: [ИНСТИТУТ / ФАКУЛЬТЕТ]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Кафедра / отделение: [КАФЕДРА / ОТДЕЛЕНИЕ]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Автор: [ФИО АВТОРА]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Руководитель: [ФИО РУКОВОДИТЕЛЯ]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Группа: [ГРУППА]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Город: [ГОРОД]", alignment="left", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Год: [ГОД]", alignment="left", first_line_indent_cm=None)
 
     document.add_page_break()
     add_paragraph(
@@ -717,6 +719,27 @@ def build_agent_brief_document(template_path: Path, output_path: Path, spec_path
     )
     for field_name, description in spec["required_input_fields"].items():
         add_paragraph(document, body_style, f"{field_name}: {description}", first_line_indent_cm=None)
+
+    add_paragraph(
+        document,
+        section_style,
+        "1.3 Политика плейсхолдеров и запроса реквизитов",
+        alignment="left",
+        first_line_indent_cm=None,
+        bold=True,
+        font_size_pt=14,
+        outline_level=1,
+    )
+    placeholder_policy = spec["input_collection_policy"]
+    add_paragraph(document, body_style, placeholder_policy["no_hardcoded_identity_rule"], first_line_indent_cm=None)
+    add_paragraph(document, body_style, placeholder_policy["generic_placeholder_format"], first_line_indent_cm=None)
+    add_paragraph(document, body_style, placeholder_policy["final_submission_rule"], first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Типовые плейсхолдеры для титульных и сопроводительных листов:", first_line_indent_cm=None, bold=True)
+    for item in placeholder_policy["title_page_placeholder_examples"]:
+        add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Если отсутствуют обязательные реквизиты, которые нужно запросить перед финальной генерацией:", first_line_indent_cm=None, bold=True)
+    for item in placeholder_policy["request_when_missing"]:
+        add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
 
     add_paragraph(
         document,
