@@ -65,6 +65,95 @@ def save_json(data: dict[str, Any], output_path: Path | None) -> None:
     output_path.write_text(payload, encoding="utf-8")
 
 
+def normalize_lookup(value: str | None) -> str:
+    if not value:
+        return ""
+    return " ".join(value.lower().replace("ё", "е").split())
+
+
+def summarize_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": profile["id"],
+        "title": profile["title"],
+        "education_level": profile["education_level"],
+        "qualification_level": profile["qualification_level"],
+        "guideline_document": profile["guideline_document"],
+        "when_to_use": profile["when_to_use"],
+    }
+
+
+def resolve_work_profile(
+    spec: dict[str, Any],
+    *,
+    work_type: str | None,
+    education_level: str | None,
+    qualification_level: str | None,
+) -> dict[str, Any]:
+    routing = spec["work_type_routing"]
+    normalized_input = normalize_lookup(" ".join(filter(None, [work_type, education_level, qualification_level])))
+    matched_profiles: list[dict[str, Any]] = []
+
+    for profile in routing["profiles"]:
+        aliases = [normalize_lookup(alias) for alias in profile.get("aliases", [])]
+        if any(alias and alias in normalized_input for alias in aliases):
+            matched_profiles.append(profile)
+
+    response: dict[str, Any] = {
+        "input": {
+            "work_type": work_type,
+            "education_level": education_level,
+            "qualification_level": qualification_level,
+        },
+        "selection_priority": routing["selection_priority"],
+    }
+
+    if len(matched_profiles) == 1:
+        profile = matched_profiles[0]
+        response.update(
+            {
+                "status": "resolved",
+                "selected_profile": summarize_profile(profile),
+                "selection_note": (
+                    f"Выбран профиль {profile['id']} на основании совпадения типа работы, "
+                    "уровня образования или квалификации."
+                ),
+            }
+        )
+        return response
+
+    if len(matched_profiles) > 1:
+        response.update(
+            {
+                "status": "ambiguous",
+                "reason": "Найдено несколько подходящих профилей.",
+                "candidates": [summarize_profile(profile) for profile in matched_profiles],
+                "recommended_action": routing["ambiguity_rules"][1]["action"],
+            }
+        )
+        return response
+
+    if "вкр" in normalized_input:
+        response.update(
+            {
+                "status": "ambiguous",
+                "reason": "Слово «ВКР» само по себе неоднозначно и не определяет уровень образования.",
+                "candidates": [summarize_profile(profile) for profile in routing["profiles"]],
+                "recommended_action": routing["ambiguity_rules"][0]["action"],
+            }
+        )
+        return response
+
+    response.update(
+        {
+            "status": "unresolved",
+            "reason": "Не удалось однозначно сопоставить входные данные с профилями методических указаний.",
+            "recommended_action": "Уточнить тип работы, уровень образования и основную методичку.",
+            "available_profiles": [summarize_profile(profile) for profile in routing["profiles"]],
+        }
+    )
+    return response
+
+
 def read_package_styles(document_path: Path) -> dict[str, Any]:
     ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
     with ZipFile(document_path) as archive:
@@ -502,7 +591,7 @@ def build_agent_brief_document(template_path: Path, output_path: Path, spec_path
     add_paragraph(
         document,
         chapter_style,
-        "ПРОФИЛЬ ДЛЯ ИИ-АГЕНТА ПО ПОДГОТОВКЕ ВКР",
+        "ПРОФИЛЬ ДЛЯ ИИ-АГЕНТА ПО ПОДГОТОВКЕ ВКР И ДИПЛОМНЫХ ПРОЕКТОВ",
         alignment="center",
         first_line_indent_cm=None,
         bold=True,
@@ -556,10 +645,70 @@ def build_agent_brief_document(template_path: Path, output_path: Path, spec_path
     add_paragraph(document, body_style, spec["source_assets"]["mandatory_usage_rule"], font_size_pt=14)
     add_paragraph(document, body_style, spec["automation_tooling"]["agent_usage_rule"], font_size_pt=14)
 
+    routing = spec["work_type_routing"]
     add_paragraph(
         document,
         section_style,
-        "1.1 Что пользователь должен заполнить перед отправкой ИИ",
+        "1.1 Как выбрать профиль методических указаний",
+        alignment="left",
+        first_line_indent_cm=None,
+        bold=True,
+        font_size_pt=14,
+        outline_level=1,
+    )
+    for item in routing["selection_priority"]:
+        add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
+    for rule in routing["ambiguity_rules"]:
+        add_paragraph(document, body_style, f"- {rule['trigger']} {rule['action']}", first_line_indent_cm=None)
+    for profile in routing["profiles"]:
+        blueprint = profile["document_blueprint"]
+        add_paragraph(document, body_style, profile["title"], alignment="left", first_line_indent_cm=None, bold=True)
+        add_paragraph(
+            document,
+            body_style,
+            (
+                f"Основная методичка: {profile['guideline_document']['display_name']} "
+                f"({profile['guideline_document']['file_name_hint']})."
+            ),
+            first_line_indent_cm=None,
+        )
+        add_paragraph(
+            document,
+            body_style,
+            f"Когда использовать: {'; '.join(profile['when_to_use'])}",
+            first_line_indent_cm=None,
+        )
+        add_paragraph(
+            document,
+            body_style,
+            f"Фронт-маттер: {'; '.join(blueprint['front_matter'])}",
+            first_line_indent_cm=None,
+        )
+        add_paragraph(
+            document,
+            body_style,
+            f"Основные разделы: {'; '.join(blueprint['body'])}",
+            first_line_indent_cm=None,
+        )
+        if "final_sections" in blueprint:
+            add_paragraph(
+                document,
+                body_style,
+                f"Завершающие элементы: {'; '.join(blueprint['final_sections'])}",
+                first_line_indent_cm=None,
+            )
+        if "source_minimum" in blueprint:
+            add_paragraph(
+                document,
+                body_style,
+                f"Требование к источникам: {blueprint['source_minimum']}.",
+                first_line_indent_cm=None,
+            )
+
+    add_paragraph(
+        document,
+        section_style,
+        "1.2 Что пользователь должен заполнить перед отправкой ИИ",
         alignment="left",
         first_line_indent_cm=None,
         bold=True,
@@ -650,14 +799,73 @@ def build_agent_brief_document(template_path: Path, output_path: Path, spec_path
     add_paragraph(
         document,
         section_style,
-        "3.1 Рекомендуемая структура ИТ-проекта",
+        "3.1 Общие структурные элементы",
         alignment="left",
         first_line_indent_cm=None,
         bold=True,
         font_size_pt=14,
         outline_level=1,
     )
+    for item in spec["content_structure_rules"]["introduction_must_include"]:
+        add_paragraph(document, body_style, f"- Во введении предусмотреть: {item}", first_line_indent_cm=None)
+
+    diploma_profile = next(profile for profile in routing["profiles"] if profile["id"] == "diploma_project_spo")
+    diploma_blueprint = diploma_profile["document_blueprint"]
+    add_paragraph(
+        document,
+        section_style,
+        "3.2 Профиль дипломного проекта СПО",
+        alignment="left",
+        first_line_indent_cm=None,
+        bold=True,
+        font_size_pt=14,
+        outline_level=1,
+    )
+    add_paragraph(document, body_style, f"Фронт-маттер: {'; '.join(diploma_blueprint['front_matter'])}", first_line_indent_cm=None)
     for item in spec["content_structure_rules"]["recommended_structure_for_it_project"]:
+        add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
+    add_paragraph(
+        document,
+        body_style,
+        f"Завершающие разделы: {'; '.join(diploma_blueprint['final_sections'])}.",
+        first_line_indent_cm=None,
+    )
+    add_paragraph(
+        document,
+        body_style,
+        (
+            f"Рекомендуемый объем основной части: {diploma_blueprint['main_volume_pages']}; "
+            f"объем введения: {diploma_blueprint['introduction_volume_pages']}."
+        ),
+        first_line_indent_cm=None,
+    )
+    for item in diploma_profile["special_notes"]:
+        add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
+
+    masters_profile = next(profile for profile in routing["profiles"] if profile["id"] == "masters_vkr_vo")
+    masters_blueprint = masters_profile["document_blueprint"]
+    add_paragraph(
+        document,
+        section_style,
+        "3.3 Профиль ВКР магистратуры",
+        alignment="left",
+        first_line_indent_cm=None,
+        bold=True,
+        font_size_pt=14,
+        outline_level=1,
+    )
+    add_paragraph(document, body_style, f"Фронт-маттер: {'; '.join(masters_blueprint['front_matter'])}", first_line_indent_cm=None)
+    for item in masters_blueprint["body"]:
+        add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
+    add_paragraph(document, body_style, f"Требование к источникам: {masters_blueprint['source_minimum']}.", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Сопроводительные документы:", first_line_indent_cm=None, bold=True)
+    for item in masters_profile["supporting_documents"]:
+        add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Профессиональные акценты:", first_line_indent_cm=None, bold=True)
+    for item in masters_profile["activity_profiles"]:
+        add_paragraph(document, body_style, f"- {item['name']}: {item['focus']}", first_line_indent_cm=None)
+    add_paragraph(document, body_style, "Рекомендуемые нотации моделирования:", first_line_indent_cm=None, bold=True)
+    for item in masters_profile["modeling_recommendations"]:
         add_paragraph(document, body_style, f"- {item}", first_line_indent_cm=None)
 
     add_paragraph(
@@ -771,6 +979,17 @@ def command_summarize_doc(args: argparse.Namespace) -> None:
     save_json(summarize_docx(args.input), args.output)
 
 
+def command_resolve_profile(args: argparse.Namespace) -> None:
+    spec = load_spec(args.spec)
+    result = resolve_work_profile(
+        spec,
+        work_type=args.work_type,
+        education_level=args.education_level,
+        qualification_level=args.qualification_level,
+    )
+    save_json(result, args.output)
+
+
 def command_finalize_doc(args: argparse.Namespace) -> None:
     working_path = apply_gost_profile(args.input, None, args.spec)
     refresh_fields(working_path)
@@ -838,6 +1057,17 @@ def build_parser() -> argparse.ArgumentParser:
     summarize_parser.add_argument("--input", type=Path, required=True)
     summarize_parser.add_argument("--output", type=Path)
     summarize_parser.set_defaults(func=command_summarize_doc)
+
+    resolve_parser = subparsers.add_parser(
+        "resolve-profile",
+        help="Определить профиль методических указаний по типу работы и уровню образования.",
+    )
+    resolve_parser.add_argument("--work-type", type=str, required=True)
+    resolve_parser.add_argument("--education-level", type=str)
+    resolve_parser.add_argument("--qualification-level", type=str)
+    resolve_parser.add_argument("--spec", type=Path, default=DEFAULT_SPEC_PATH)
+    resolve_parser.add_argument("--output", type=Path)
+    resolve_parser.set_defaults(func=command_resolve_profile)
 
     finalize_parser = subparsers.add_parser(
         "finalize-doc",
