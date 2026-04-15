@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "schemegen"
+version = "0.1.0"
+description = "CLI utility for generating coursework-friendly diagrams from JSON documents"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+  { name = "OpenAI Codex" }
+]
+
+[project.scripts]
+schemegen = "schemegen.cli:main"
+
+[tool.setuptools]
+packages = ["schemegen"]

@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0",
+  "title": "Набор схем для пояснительной записки",
+  "diagrams": [
+    {
+      "id": "context_a0",
+      "title": "IDEF0 контекстная диаграмма",
+      "description": "Контекст функции обработки заявок",
+      "type": "idef0",
+      "nodes": [
+        {
+          "id": "manage_requests",
+          "label": "Обрабатывать заявки пользователей",
+          "kind": "function",
+          "code": "A0",
+          "row": 1,
+          "column": 1,
+          "decomposes_to": "decompose_a0"
+        }
+      ],
+      "edges": [
+        {
+          "id": "input_request",
+          "source": null,
+          "target": "manage_requests",
+          "role": "input",
+          "label": "Заявка"
+        },
+        {
+          "id": "control_rules",
+          "source": null,
+          "target": "manage_requests",
+          "role": "control",
+          "label": "Регламент"
+        },
+        {
+          "id": "output_report",
+          "source": "manage_requests",
+          "target": null,
+          "role": "output",
+          "label": "Ответ"
+        },
+        {
+          "id": "mechanism_operator",
+          "source": null,
+          "target": "manage_requests",
+          "role": "mechanism",
+          "label": "Оператор и БД"
+        }
+      ]
+    },
+    {
+      "id": "decompose_a0",
+      "title": "IDEF0 декомпозиция A0",
+      "description": "Детализация верхнего уровня",
+      "type": "idef0",
+      "nodes": [
+        {
+          "id": "accept_request",
+          "label": "Принять заявку",
+          "kind": "function",
+          "code": "A1",
+          "row": 1,
+          "column": 0
+        },
+        {
+          "id": "validate_request",
+          "label": "Проверить корректность",
+          "kind": "function",
+          "code": "A2",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "prepare_response",
+          "label": "Сформировать ответ",
+          "kind": "function",
+          "code": "A3",
+          "row": 1,
+          "column": 2
+        }
+      ],
+      "edges": [
+        {
+          "id": "a1_input",
+          "source": null,
+          "target": "accept_request",
+          "role": "input",
+          "icom": "I1",
+          "label": "Входная заявка"
+        },
+        {
+          "id": "a1_a2",
+          "source": "accept_request",
+          "target": "validate_request",
+          "label": "Данные заявки"
+        },
+        {
+          "id": "a2_a3",
+          "source": "validate_request",
+          "target": "prepare_response",
+          "label": "Результат проверки"
+        },
+        {
+          "id": "rules_all",
+          "source": null,
+          "target": "validate_request",
+          "role": "control",
+          "icom": "C1",
+          "label": "Правила обработки"
+        },
+        {
+          "id": "answer_out",
+          "source": "prepare_response",
+          "target": null,
+          "role": "output",
+          "icom": "O1",
+          "label": "Ответ пользователю"
+        }
+      ]
+    },
+    {
+      "id": "algorithm_main",
+      "title": "Блок-схема алгоритма обработки",
+      "description": "Алгоритм может ссылаться на ту же предметную область, что и IDEF0",
+      "type": "flowchart",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Начало",
+          "kind": "start",
+          "row": 0,
+          "column": 1
+        },
+        {
+          "id": "get_request",
+          "label": "Получить заявку",
+          "kind": "process",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "is_valid",
+          "label": "Заявка корректна?",
+          "kind": "decision",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "return_revision",
+          "label": "Отправить на доработку",
+          "kind": "data",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "build_answer",
+          "label": "Сформировать ответ",
+          "kind": "process",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "finish",
+          "label": "Конец",
+          "kind": "end",
+          "row": 4,
+          "column": 1
+        }
+      ],
+      "edges": [
+        {
+          "id": "f1",
+          "source": "start",
+          "target": "get_request"
+        },
+        {
+          "id": "f2",
+          "source": "get_request",
+          "target": "is_valid"
+        },
+        {
+          "id": "f3",
+          "source": "is_valid",
+          "target": "return_revision",
+          "label": "Нет"
+        },
+        {
+          "id": "f4",
+          "source": "is_valid",
+          "target": "build_answer",
+          "label": "Да"
+        },
+        {
+          "id": "f5",
+          "source": "build_answer",
+          "target": "finish"
+        }
+      ]
+    }
+  ]
+}

@@ -3,3 +3,5 @@ __pycache__/
 tmp/
 test/
 test_dotm/
+tools/schemegen/rendered/
+tools/schemegen/.venv/

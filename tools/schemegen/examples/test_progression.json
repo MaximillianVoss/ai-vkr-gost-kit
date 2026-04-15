@@ -1,0 +1,1071 @@
+{
+  "schema_version": "1.0",
+  "title": "Тестовый набор схем от простого к сложному",
+  "diagrams": [
+    {
+      "id": "flow_01_linear",
+      "title": "01. Линейная блок-схема",
+      "description": "Самый простой сценарий без ветвлений",
+      "type": "flowchart",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Начало",
+          "kind": "start",
+          "row": 0,
+          "column": 1
+        },
+        {
+          "id": "read_input",
+          "label": "Получить входные данные",
+          "kind": "process",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "calculate",
+          "label": "Выполнить вычисление",
+          "kind": "process",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "finish",
+          "label": "Конец",
+          "kind": "end",
+          "row": 3,
+          "column": 1
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "start",
+          "target": "read_input"
+        },
+        {
+          "id": "e2",
+          "source": "read_input",
+          "target": "calculate"
+        },
+        {
+          "id": "e3",
+          "source": "calculate",
+          "target": "finish"
+        }
+      ]
+    },
+    {
+      "id": "flow_02_branching",
+      "title": "02. Блок-схема с ветвлением",
+      "description": "Проверка данных и реакция на ошибку",
+      "type": "flowchart",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Начало",
+          "kind": "start",
+          "row": 0,
+          "column": 1
+        },
+        {
+          "id": "load_request",
+          "label": "Считать заявку",
+          "kind": "process",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "validate",
+          "label": "Данные корректны?",
+          "kind": "decision",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "request_fix",
+          "label": "Запросить исправление",
+          "kind": "data",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "register",
+          "label": "Зарегистрировать заявку",
+          "kind": "process",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "finish",
+          "label": "Конец",
+          "kind": "end",
+          "row": 4,
+          "column": 1
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "start",
+          "target": "load_request"
+        },
+        {
+          "id": "e2",
+          "source": "load_request",
+          "target": "validate"
+        },
+        {
+          "id": "e3",
+          "source": "validate",
+          "target": "request_fix",
+          "label": "Нет"
+        },
+        {
+          "id": "e4",
+          "source": "validate",
+          "target": "register",
+          "label": "Да"
+        },
+        {
+          "id": "e5",
+          "source": "register",
+          "target": "finish"
+        }
+      ]
+    },
+    {
+      "id": "flow_03_loop_subprocess",
+      "title": "03. Цикл, подпроцесс и документ",
+      "description": "Более насыщенная схема с повторной обработкой",
+      "type": "flowchart",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Начало",
+          "kind": "start",
+          "row": 0,
+          "column": 1
+        },
+        {
+          "id": "load_batch",
+          "label": "Загрузить пакет задач",
+          "kind": "process",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "has_tasks",
+          "label": "Есть необработанные задачи?",
+          "kind": "decision",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "prepare_summary",
+          "label": "Подготовить итоговую сводку",
+          "kind": "document",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "take_task",
+          "label": "Выбрать следующую задачу",
+          "kind": "process",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "run_solver",
+          "label": "Выполнить модуль решения",
+          "kind": "predefined_process",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "id": "quality_ok",
+          "label": "Результат корректен?",
+          "kind": "decision",
+          "row": 5,
+          "column": 1
+        },
+        {
+          "id": "rework",
+          "label": "Повторить обработку",
+          "kind": "process",
+          "row": 5,
+          "column": 2
+        },
+        {
+          "id": "archive",
+          "label": "Зафиксировать результат",
+          "kind": "document",
+          "row": 6,
+          "column": 1
+        },
+        {
+          "id": "finish",
+          "label": "Конец",
+          "kind": "end",
+          "row": 3,
+          "column": 3
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "start",
+          "target": "load_batch"
+        },
+        {
+          "id": "e2",
+          "source": "load_batch",
+          "target": "has_tasks"
+        },
+        {
+          "id": "e3",
+          "source": "has_tasks",
+          "target": "prepare_summary",
+          "label": "Нет"
+        },
+        {
+          "id": "e4",
+          "source": "has_tasks",
+          "target": "take_task",
+          "label": "Да"
+        },
+        {
+          "id": "e5",
+          "source": "take_task",
+          "target": "run_solver"
+        },
+        {
+          "id": "e6",
+          "source": "run_solver",
+          "target": "quality_ok"
+        },
+        {
+          "id": "e7",
+          "source": "quality_ok",
+          "target": "rework",
+          "label": "Нет"
+        },
+        {
+          "id": "e8",
+          "source": "rework",
+          "target": "run_solver",
+          "source_side": "left",
+          "target_side": "right"
+        },
+        {
+          "id": "e9",
+          "source": "quality_ok",
+          "target": "archive",
+          "label": "Да"
+        },
+        {
+          "id": "e10",
+          "source": "archive",
+          "target": "has_tasks",
+          "source_side": "right",
+          "target_side": "right",
+          "label": "Следующая"
+        },
+        {
+          "id": "e11",
+          "source": "prepare_summary",
+          "target": "finish"
+        }
+      ]
+    },
+    {
+      "id": "flow_04_connectors",
+      "title": "04. Блок-схема с соединителями",
+      "description": "Использование connector и offpage для длинных переходов и разрыва по листам",
+      "type": "flowchart",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Начало",
+          "kind": "start",
+          "row": 0,
+          "column": 0
+        },
+        {
+          "id": "scan_pages",
+          "label": "Проверить очередной раздел",
+          "kind": "process",
+          "row": 1,
+          "column": 0
+        },
+        {
+          "id": "has_more",
+          "label": "Есть еще разделы?",
+          "kind": "decision",
+          "row": 2,
+          "column": 0
+        },
+        {
+          "id": "connector_a",
+          "label": "A",
+          "kind": "connector",
+          "row": 3,
+          "column": 0
+        },
+        {
+          "id": "to_page_2",
+          "label": "Лист 2 / B",
+          "kind": "offpage",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "from_page_1",
+          "label": "Лист 1 / B",
+          "kind": "offpage",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "id": "finish_report",
+          "label": "Собрать итоговую часть",
+          "kind": "process",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "id": "finish",
+          "label": "Конец",
+          "kind": "end",
+          "row": 3,
+          "column": 4
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "start",
+          "target": "scan_pages"
+        },
+        {
+          "id": "e2",
+          "source": "scan_pages",
+          "target": "has_more"
+        },
+        {
+          "id": "e3",
+          "source": "has_more",
+          "target": "connector_a",
+          "label": "Да"
+        },
+        {
+          "id": "e4",
+          "source": "connector_a",
+          "target": "scan_pages",
+          "source_side": "left",
+          "target_side": "left"
+        },
+        {
+          "id": "e5",
+          "source": "has_more",
+          "target": "to_page_2",
+          "label": "Нет"
+        },
+        {
+          "id": "e6",
+          "source": "from_page_1",
+          "target": "finish_report"
+        },
+        {
+          "id": "e7",
+          "source": "finish_report",
+          "target": "finish"
+        }
+      ]
+    },
+    {
+      "id": "idef0_04_context",
+      "title": "04. IDEF0 контекст A0",
+      "description": "Контекстная диаграмма системы обработки учебных задач",
+      "type": "idef0",
+      "frame": {
+        "author": "ИИ-агент",
+        "project": "Демонстрационный набор SchemeGen",
+        "date": "13.04.2026",
+        "revision": "1",
+        "status": "Черновик",
+        "reader": "Преподаватель",
+        "context": "ВЕРХ",
+        "notes": "0 1 2 3 4 5 6 7 8 9",
+        "page": "1",
+        "node_ref": "A0"
+      },
+      "nodes": [
+        {
+          "id": "manage_tasks",
+          "label": "Организовать обработку учебных задач",
+          "kind": "function",
+          "code": "A0",
+          "row": 1,
+          "column": 1,
+          "decomposes_to": "idef0_05_decomposition"
+        }
+      ],
+      "edges": [
+        {
+          "id": "input_tasks",
+          "source": null,
+          "target": "manage_tasks",
+          "role": "input",
+          "label": "Список задач"
+        },
+        {
+          "id": "control_rules",
+          "source": null,
+          "target": "manage_tasks",
+          "role": "control",
+          "label": "Методические правила"
+        },
+        {
+          "id": "output_report",
+          "source": "manage_tasks",
+          "target": null,
+          "role": "output",
+          "label": "Отчет и решения"
+        },
+        {
+          "id": "mechanism_stack",
+          "source": null,
+          "target": "manage_tasks",
+          "role": "mechanism",
+          "label": "Оператор, Python, база данных"
+        }
+      ]
+    },
+    {
+      "id": "idef0_05_decomposition",
+      "title": "05. IDEF0 декомпозиция A0",
+      "description": "Сложный пример с несколькими функциями и потоками",
+      "type": "idef0",
+      "frame": {
+        "author": "ИИ-агент",
+        "project": "Демонстрационный набор SchemeGen",
+        "date": "13.04.2026",
+        "revision": "2",
+        "status": "Рекомендовано",
+        "reader": "Руководитель",
+        "context": "A0",
+        "notes": "1 2 3 4 5",
+        "page": "2",
+        "node_ref": "A0"
+      },
+      "nodes": [
+        {
+          "id": "accept_tasks",
+          "label": "Принять и структурировать задачи",
+          "kind": "function",
+          "code": "A1",
+          "row": 1,
+          "column": 0
+        },
+        {
+          "id": "solve_tasks",
+          "label": "Решить задачи и проверить результат",
+          "kind": "function",
+          "code": "A2",
+          "row": 1,
+          "column": 1,
+          "decomposes_to": "idef0_05a_solve_tasks_detail"
+        },
+        {
+          "id": "assemble_report",
+          "label": "Собрать отчетные материалы",
+          "kind": "function",
+          "code": "A3",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "id": "publish_result",
+          "label": "Передать итог пользователю",
+          "kind": "function",
+          "code": "A4",
+          "row": 1,
+          "column": 3
+        }
+      ],
+      "edges": [
+        {
+          "id": "ext_input",
+          "source": null,
+          "target": "accept_tasks",
+          "role": "input",
+          "icom": "I1",
+          "label": "Исходные задачи"
+        },
+        {
+          "id": "ext_input_secondary",
+          "source": null,
+          "target": "solve_tasks",
+          "role": "input",
+          "icom": "I1",
+          "label": "Исходные задачи"
+        },
+        {
+          "id": "methodics",
+          "source": null,
+          "target": "solve_tasks",
+          "role": "control",
+          "icom": "C1",
+          "label": "ГОСТ и методичка"
+        },
+        {
+          "id": "methodics_report",
+          "source": null,
+          "target": "assemble_report",
+          "role": "control",
+          "icom": "C1",
+          "label": "ГОСТ и методичка"
+        },
+        {
+          "id": "operator",
+          "source": null,
+          "target": "accept_tasks",
+          "role": "mechanism",
+          "icom": "M1",
+          "label": "Студент и агент"
+        },
+        {
+          "id": "storage",
+          "source": null,
+          "target": "assemble_report",
+          "role": "mechanism",
+          "tunnel_source": true,
+          "label": "Шаблоны и хранилище"
+        },
+        {
+          "id": "flow_a1_a2",
+          "source": "accept_tasks",
+          "target": "solve_tasks",
+          "label": "Нормализованные данные"
+        },
+        {
+          "id": "flow_a2_a3",
+          "source": "solve_tasks",
+          "target": "assemble_report",
+          "label": "Решения и схемы"
+        },
+        {
+          "id": "flow_a3_a4",
+          "source": "assemble_report",
+          "target": "publish_result",
+          "label": "Готовый комплект"
+        },
+        {
+          "id": "review_cycle",
+          "source": "publish_result",
+          "target": "solve_tasks",
+          "source_side": "top",
+          "target_side": "top",
+          "label": "Замечания"
+        },
+        {
+          "id": "final_output",
+          "source": "publish_result",
+          "target": null,
+          "role": "output",
+          "icom": "O1",
+          "label": "Выданный результат"
+        }
+      ]
+    },
+    {
+      "id": "idef0_05a_solve_tasks_detail",
+      "title": "05a. IDEF0 декомпозиция A2",
+      "description": "Тестовая детализация функции решения и проверки задач",
+      "type": "idef0",
+      "frame": {
+        "author": "ИИ-агент",
+        "project": "Демонстрационный набор SchemeGen",
+        "date": "15.04.2026",
+        "revision": "1",
+        "status": "Черновик",
+        "reader": "Руководитель",
+        "context": "A2",
+        "notes": "1 2 3 4",
+        "page": "2a",
+        "node_ref": "A2"
+      },
+      "nodes": [
+        {
+          "id": "parse_task",
+          "label": "Разобрать условие и критерии",
+          "kind": "function",
+          "code": "A21",
+          "row": 1,
+          "column": 0
+        },
+        {
+          "id": "draft_solution",
+          "label": "Подготовить решение",
+          "kind": "function",
+          "code": "A22",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "check_solution",
+          "label": "Проверить корректность и формат",
+          "kind": "function",
+          "code": "A23",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "id": "return_result",
+          "label": "Передать решение в сборку отчета",
+          "kind": "function",
+          "code": "A24",
+          "row": 1,
+          "column": 3
+        }
+      ],
+      "edges": [
+        {
+          "id": "detail_input",
+          "source": null,
+          "target": "parse_task",
+          "role": "input",
+          "icom": "I1",
+          "label": "Нормализованные данные"
+        },
+        {
+          "id": "detail_rules",
+          "source": null,
+          "target": "draft_solution",
+          "role": "control",
+          "icom": "C1",
+          "label": "ГОСТ и методичка"
+        },
+        {
+          "id": "detail_rules_check",
+          "source": null,
+          "target": "check_solution",
+          "role": "control",
+          "icom": "C1",
+          "label": "ГОСТ и методичка"
+        },
+        {
+          "id": "detail_agent",
+          "source": null,
+          "target": "draft_solution",
+          "role": "mechanism",
+          "icom": "M1",
+          "label": "Студент и агент"
+        },
+        {
+          "id": "detail_parser_draft",
+          "source": "parse_task",
+          "target": "draft_solution",
+          "label": "Структура решения"
+        },
+        {
+          "id": "detail_draft_check",
+          "source": "draft_solution",
+          "target": "check_solution",
+          "label": "Черновик ответа"
+        },
+        {
+          "id": "detail_check_result",
+          "source": "check_solution",
+          "target": "return_result",
+          "label": "Проверенное решение"
+        },
+        {
+          "id": "detail_rework",
+          "source": "check_solution",
+          "target": "draft_solution",
+          "source_side": "top",
+          "target_side": "top",
+          "label": "Замечания"
+        },
+        {
+          "id": "detail_output",
+          "source": "return_result",
+          "target": null,
+          "role": "output",
+          "icom": "O1",
+          "label": "Решения и схемы"
+        }
+      ]
+    },
+    {
+      "id": "idef3_06_behavior",
+      "title": "06. IDEF3 поведенческая диаграмма",
+      "description": "Пример сценарной диаграммы с junction-узлами",
+      "type": "idef3",
+      "frame": {
+        "author": "ИИ-агент",
+        "project": "Демонстрационный набор SchemeGen",
+        "date": "13.04.2026",
+        "revision": "1",
+        "status": "Рабочий проект",
+        "reader": "Преподаватель",
+        "context": "TOP",
+        "notes": "1 2 3 4 5",
+        "page": "3",
+        "node_ref": "1"
+      },
+      "nodes": [
+        {
+          "id": "receive_contract",
+          "label": "Получение договора и данных от клиента",
+          "kind": "uob",
+          "code": "1",
+          "row": 1,
+          "column": 0,
+          "x": 240,
+          "y": 240
+        },
+        {
+          "id": "analyze_mail",
+          "label": "Анализ почты и приложенных данных",
+          "kind": "uob",
+          "code": "2",
+          "row": 1,
+          "column": 1,
+          "x": 500,
+          "y": 240
+        },
+        {
+          "id": "junction_1",
+          "label": "J1",
+          "kind": "junction_x",
+          "row": 1,
+          "column": 2,
+          "x": 700,
+          "y": 240
+        },
+        {
+          "id": "form_request",
+          "label": "Формирование запроса на доп. документы",
+          "kind": "uob",
+          "code": "3",
+          "row": 0,
+          "column": 3,
+          "x": 950,
+          "y": 170
+        },
+        {
+          "id": "prepare_package",
+          "label": "Подготовка пакета документов для подачи",
+          "kind": "uob",
+          "code": "4",
+          "row": 2,
+          "column": 3,
+          "x": 950,
+          "y": 330
+        },
+        {
+          "id": "check_result",
+          "label": "Финальная проверка корректности",
+          "kind": "uob",
+          "code": "5",
+          "row": 4,
+          "column": 1,
+          "x": 500,
+          "y": 500
+        },
+        {
+          "id": "junction_2",
+          "label": "J2",
+          "kind": "junction_x",
+          "row": 4,
+          "column": 2,
+          "x": 700,
+          "y": 500
+        }
+      ],
+      "edges": [
+        {
+          "id": "ext_start",
+          "source": null,
+          "target": "receive_contract",
+          "target_side": "left",
+          "label": "Начало анализа"
+        },
+        {
+          "id": "b1",
+          "source": "receive_contract",
+          "target": "analyze_mail",
+          "source_side": "right",
+          "target_side": "left"
+        },
+        {
+          "id": "b2",
+          "source": "analyze_mail",
+          "target": "junction_1",
+          "source_side": "right",
+          "target_side": "left"
+        },
+        {
+          "id": "b3",
+          "source": "junction_1",
+          "target": "form_request",
+          "source_side": "right",
+          "target_side": "left",
+          "label": "Требуются доп. документы"
+        },
+        {
+          "id": "b4",
+          "source": "junction_1",
+          "target": "prepare_package",
+          "source_side": "bottom",
+          "target_side": "left",
+          "label": "Данные о порядке"
+        },
+        {
+          "id": "b5",
+          "source": "check_result",
+          "target": "junction_2",
+          "source_side": "right",
+          "target_side": "left"
+        },
+        {
+          "id": "b6",
+          "source": "prepare_package",
+          "target": "junction_2",
+          "source_side": "bottom",
+          "target_side": "top",
+          "label": "Найдены ошибки"
+        },
+        {
+          "id": "b7",
+          "source": "junction_2",
+          "target": null,
+          "source_side": "right",
+          "label": "Пакет документов готов к подаче"
+        },
+        {
+          "id": "b8",
+          "source": "form_request",
+          "target": null,
+          "source_side": "right",
+          "label": "Запрос клиенту"
+        }
+      ]
+    },
+    {
+      "id": "uml_07_classes",
+      "title": "07. UML class diagram",
+      "description": "Классы сервиса оформления заказов со стилевыми переопределениями",
+      "type": "uml_class",
+      "style": {
+        "background_fill": "#f8fafc",
+        "node": {
+          "fill": "#ffffff",
+          "stroke": "#334155",
+          "stroke_width": 1.6,
+          "corner_radius": 8,
+          "font_size": 13
+        },
+        "edge": {
+          "stroke": "#1d4ed8",
+          "stroke_width": 1.5,
+          "text_color": "#1e3a8a",
+          "label_fill": "#dbeafe"
+        }
+      },
+      "nodes": [
+        {
+          "id": "base_service",
+          "label": "BaseService",
+          "kind": "abstract_class",
+          "row": 0,
+          "column": 1,
+          "attributes": [
+            "#logger: ILogger"
+          ],
+          "operations": [
+            "+track(command: string): void"
+          ]
+        },
+        {
+          "id": "order_service",
+          "label": "OrderService",
+          "kind": "class",
+          "row": 1,
+          "column": 1,
+          "attributes": [
+            "-repository: IOrderRepository",
+            "-validator: OrderValidator"
+          ],
+          "operations": [
+            "+createOrder(dto: OrderDto): Order",
+            "+cancelOrder(id: Guid): void"
+          ],
+          "style": {
+            "fill": "#fef3c7",
+            "stroke": "#b45309",
+            "text_color": "#78350f"
+          }
+        },
+        {
+          "id": "repo",
+          "label": "IOrderRepository",
+          "kind": "interface",
+          "row": 1,
+          "column": 2,
+          "attributes": [],
+          "operations": [
+            "+save(order: Order): void",
+            "+getById(id: Guid): Order"
+          ]
+        },
+        {
+          "id": "dto",
+          "label": "OrderDto",
+          "kind": "class",
+          "row": 1,
+          "column": 0,
+          "attributes": [
+            "+customerId: Guid",
+            "+items: IReadOnlyList<OrderItemDto>",
+            "+requestedAt: DateTime"
+          ],
+          "operations": []
+        },
+        {
+          "id": "status",
+          "label": "OrderStatus",
+          "kind": "enum",
+          "row": 0,
+          "column": 2,
+          "attributes": [
+            "Draft",
+            "Submitted",
+            "Cancelled"
+          ],
+          "operations": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "uml_inherit",
+          "source": "order_service",
+          "target": "base_service",
+          "kind": "inheritance"
+        },
+        {
+          "id": "uml_dependency",
+          "source": "order_service",
+          "target": "repo",
+          "kind": "dependency",
+          "label": "использует"
+        },
+        {
+          "id": "uml_association",
+          "source": "dto",
+          "target": "order_service",
+          "kind": "association",
+          "source_label": "1",
+          "target_label": "1"
+        },
+        {
+          "id": "uml_status",
+          "source": "order_service",
+          "target": "status",
+          "kind": "association",
+          "label": "присваивает статус"
+        }
+      ]
+    },
+    {
+      "id": "idef1x_08_data_model",
+      "title": "08. IDEF1X data model",
+      "description": "Простейшая модель БД с identifying и non-identifying связями",
+      "type": "idef1x",
+      "style": {
+        "background_fill": "#fcfcfd",
+        "node": {
+          "fill": "#ffffff",
+          "stroke": "#1f2937",
+          "stroke_width": 1.4,
+          "font_size": 12
+        },
+        "edge": {
+          "stroke": "#0f172a",
+          "stroke_width": 1.5,
+          "text_color": "#0f172a"
+        }
+      },
+      "nodes": [
+        {
+          "id": "customer",
+          "label": "Customer",
+          "kind": "entity",
+          "row": 0,
+          "column": 0,
+          "columns": [
+            { "name": "customer_id", "data_type": "uuid", "key": "pk", "nullable": false },
+            { "name": "full_name", "data_type": "varchar(200)", "nullable": false },
+            { "name": "email", "data_type": "varchar(200)", "key": "unique", "nullable": false }
+          ]
+        },
+        {
+          "id": "order",
+          "label": "Order",
+          "kind": "entity",
+          "row": 0,
+          "column": 1,
+          "columns": [
+            { "name": "order_id", "data_type": "uuid", "key": "pk", "nullable": false },
+            { "name": "customer_id", "data_type": "uuid", "key": "fk", "nullable": false },
+            { "name": "status", "data_type": "varchar(40)", "nullable": false }
+          ],
+          "style": {
+            "fill": "#e0f2fe",
+            "stroke": "#0369a1"
+          }
+        },
+        {
+          "id": "order_item",
+          "label": "OrderItem",
+          "kind": "dependent_entity",
+          "row": 1,
+          "column": 1,
+          "columns": [
+            { "name": "order_id", "data_type": "uuid", "key": "pk_fk", "nullable": false },
+            { "name": "line_no", "data_type": "int", "key": "pk", "nullable": false },
+            { "name": "product_id", "data_type": "uuid", "nullable": false },
+            { "name": "qty", "data_type": "int", "nullable": false, "default": "1" }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "customer_order",
+          "source": "customer",
+          "target": "order",
+          "kind": "non_identifying",
+          "label": "оформляет",
+          "source_label": "1",
+          "target_label": "0..N"
+        },
+        {
+          "id": "order_item_rel",
+          "source": "order",
+          "target": "order_item",
+          "kind": "identifying",
+          "label": "содержит",
+          "source_label": "1",
+          "target_label": "1..N",
+          "style": {
+            "stroke": "#047857",
+            "label_fill": "#d1fae5"
+          }
+        }
+      ]
+    }
+  ]
+}

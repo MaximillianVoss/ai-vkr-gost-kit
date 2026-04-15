@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "title": "Пример блок-схемы для курсовой работы",
+  "diagrams": [
+    {
+      "id": "algorithm_main",
+      "title": "Алгоритм проверки входных данных",
+      "description": "Простая блок-схема для демонстрации формата",
+      "type": "flowchart",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Начало",
+          "kind": "start",
+          "row": 0,
+          "column": 1
+        },
+        {
+          "id": "read_data",
+          "label": "Прочитать исходные данные",
+          "kind": "process",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "check_data",
+          "label": "Данные корректны?",
+          "kind": "decision",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "fix_data",
+          "label": "Запросить исправление",
+          "kind": "data",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "save_result",
+          "label": "Сохранить результат",
+          "kind": "process",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "finish",
+          "label": "Конец",
+          "kind": "end",
+          "row": 4,
+          "column": 1
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "start",
+          "target": "read_data"
+        },
+        {
+          "id": "e2",
+          "source": "read_data",
+          "target": "check_data"
+        },
+        {
+          "id": "e3",
+          "source": "check_data",
+          "target": "fix_data",
+          "label": "Нет"
+        },
+        {
+          "id": "e4",
+          "source": "check_data",
+          "target": "save_result",
+          "label": "Да"
+        },
+        {
+          "id": "e5",
+          "source": "save_result",
+          "target": "finish"
+        }
+      ]
+    }
+  ]
+}

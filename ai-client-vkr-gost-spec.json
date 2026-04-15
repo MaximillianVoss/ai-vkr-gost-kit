@@ -1,6 +1,6 @@
 {
   "spec_id": "work-type-aware-vkr-gost-profile",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "language": "ru-RU",
   "description": "Инструкция для ИИ-клиента по подготовке, написанию и оформлению ВКР, дипломного проекта или пояснительной записки с явным выбором профильной методички в зависимости от уровня образования и типа итоговой работы.",
   "source_assets": {
@@ -29,6 +29,20 @@
     "default_spec_path": "ai-client-vkr-gost-spec.json",
     "editable_word_brief_example": "Профиль для ИИ агента - ВКР и ДП по ГОСТ.docx",
     "agent_usage_rule": "Другой ИИ-агент должен сначала использовать этот CLI для чтения стилей шаблона, создания .docx из .dotx или .dotm, применения ГОСТ-профиля, встроенной постобработки документа, обновления оглавления и экспорта PDF, а уже затем тратить токены на смысловую правку текста.",
+    "diagram_generation_rule": "Если в работе нужны блок-схемы, IDEF0, IDEF1X, IDEF3 или UML-диаграммы, сначала использовать tools/schemegen для генерации JSON и SVG, а затем вставлять готовые рисунки в Word-документ.",
+    "secondary_cli_tools": [
+      {
+        "tool_id": "schemegen",
+        "relative_path": "tools/schemegen",
+        "entrypoint": "python -m schemegen",
+        "when_to_use": [
+          "Подготовка блок-схем для алгоритмов и приложений.",
+          "Построение IDEF0/IDEF1X/IDEF3/UML-диаграмм для основной части или приложений.",
+          "Генерация SVG-рисунков по структурированному JSON перед вставкой в DOCX."
+        ],
+        "usage_rule": "Сначала запускать validate, затем render или render-all. Для IDEF0 соблюдать контекстную диаграмму из одного блока и дочерние декомпозиции из 3..6 блоков."
+      }
+    ],
     "recommended_commands": [
       "python word_agent_toolkit.py resolve-profile --work-type \"дипломный проект\" --education-level \"СПО\"",
       "python word_agent_toolkit.py resolve-profile --work-type \"магистерская ВКР\" --education-level \"магистратура\"",
@@ -41,7 +55,9 @@
       "python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --macro \"NormalizePageNumbers\" --macro \"AlignTablesAndFigures\"",
       "python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --insert-placeholder-captions --strip-heading-numbering",
       "python word_agent_toolkit.py append-code-appendix --input tmp/docs/new-note.docx --source path/to/source-file.cs --title \"Листинг кода основного модуля\" --label А",
-      "python word_agent_toolkit.py summarize-doc --input tmp/docs/new-note.docx"
+      "python word_agent_toolkit.py summarize-doc --input tmp/docs/new-note.docx",
+      "Set-Location tools/schemegen; python -m schemegen validate .\\examples\\test_progression.json",
+      "Set-Location tools/schemegen; python -m schemegen render-all .\\examples\\test_progression.json -o .\\rendered\\test_progression"
     ]
   },
   "supported_document_types": [
