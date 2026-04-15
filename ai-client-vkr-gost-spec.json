@@ -4,7 +4,7 @@
   "language": "ru-RU",
   "description": "Инструкция для ИИ-клиента по подготовке, написанию и оформлению ВКР, дипломного проекта или пояснительной записки с явным выбором профильной методички в зависимости от уровня образования и типа итоговой работы.",
   "source_assets": {
-    "word_template_path": "C:/path/to/your-template.dotm",
+    "word_template_path": "C:/path/to/your-template.dotx",
     "methodical_guidelines_catalog": [
       {
         "profile_id": "diploma_project_spo",
@@ -20,7 +20,7 @@
       }
     ],
     "portability_note": "Пути к шаблону Word и методическим указаниям являются примерами. При использовании комплекта их необходимо заменить на актуальные локальные пути и не публиковать машинно-зависимые абсолютные пути без необходимости.",
-    "mandatory_usage_rule": "Документ всегда должен создаваться на основе пользовательского шаблона .dotm. Сначала использовать стили шаблона, затем проверять визуальное соответствие ГОСТ и методическим указаниям.",
+    "mandatory_usage_rule": "Документ всегда должен создаваться на основе пользовательского шаблона .dotx или .dotm. Сначала использовать стили шаблона, затем проверять визуальное соответствие ГОСТ и методическим указаниям.",
     "conflict_resolution_rule": "Если пользовательский стиль шаблона визуально противоречит ГОСТ или методическим указаниям, сохранить стиль как основу, но довести итоговый вид до требований методички.",
     "profile_priority_rule": "Сначала выбрать профиль методических указаний по типу работы и уровню образования, и только после этого применять требования к структуре, сопроводительным документам и оформлению."
   },
@@ -28,16 +28,18 @@
     "preferred_cli_script": "word_agent_toolkit.py",
     "default_spec_path": "ai-client-vkr-gost-spec.json",
     "editable_word_brief_example": "Профиль для ИИ агента - ВКР и ДП по ГОСТ.docx",
-    "agent_usage_rule": "Другой ИИ-агент должен сначала использовать этот CLI для чтения стилей шаблона, создания .docx из .dotm, применения ГОСТ-профиля, обновления оглавления и экспорта PDF, а уже затем тратить токены на смысловую правку текста.",
+    "agent_usage_rule": "Другой ИИ-агент должен сначала использовать этот CLI для чтения стилей шаблона, создания .docx из .dotx или .dotm, применения ГОСТ-профиля, встроенной постобработки документа, обновления оглавления и экспорта PDF, а уже затем тратить токены на смысловую правку текста.",
     "recommended_commands": [
       "python word_agent_toolkit.py resolve-profile --work-type \"дипломный проект\" --education-level \"СПО\"",
       "python word_agent_toolkit.py resolve-profile --work-type \"магистерская ВКР\" --education-level \"магистратура\"",
-      "python word_agent_toolkit.py inspect-template --template \"C:/path/to/your-template.dotm\"",
-      "python word_agent_toolkit.py create-from-template --template \"C:/path/to/your-template.dotm\" --output tmp/docs/new-note.docx",
-      "python word_agent_toolkit.py generate-agent-brief --template \"C:/path/to/your-template.dotm\" --output \"Профиль для ИИ агента - ВКР и ДП по ГОСТ.docx\"",
+      "python word_agent_toolkit.py inspect-template --template \"C:/path/to/your-template.dotx\"",
+      "python word_agent_toolkit.py create-from-template --template \"C:/path/to/your-template.dotx\" --output tmp/docs/new-note.docx",
+      "python word_agent_toolkit.py generate-agent-brief --template \"C:/path/to/your-template.dotx\" --output \"Профиль для ИИ агента - ВКР и ДП по ГОСТ.docx\"",
       "python word_agent_toolkit.py apply-gost --input tmp/docs/new-note.docx",
-      "python word_agent_toolkit.py refresh-fields --input tmp/docs/new-note.docx",
-      "python word_agent_toolkit.py export-pdf --input tmp/docs/new-note.docx --output new-note.pdf",
+      "python word_agent_toolkit.py refresh-fields --input tmp/docs/new-note.docx --spec ai-client-vkr-gost-spec.json --builtin-layout",
+      "python word_agent_toolkit.py export-pdf --input tmp/docs/new-note.docx --output new-note.pdf --spec ai-client-vkr-gost-spec.json --builtin-layout",
+      "python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --macro \"NormalizePageNumbers\" --macro \"AlignTablesAndFigures\"",
+      "python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --insert-placeholder-captions --strip-heading-numbering",
       "python word_agent_toolkit.py append-code-appendix --input tmp/docs/new-note.docx --source path/to/source-file.cs --title \"Листинг кода основного модуля\" --label А",
       "python word_agent_toolkit.py summarize-doc --input tmp/docs/new-note.docx"
     ]
@@ -385,30 +387,36 @@
     "chapter_title": {
       "format_example": "ГЛАВА 1. НАЗВАНИЕ ГЛАВЫ",
       "font_name": "Times New Roman",
-      "font_size_pt": 14,
+      "font_size_pt": 20,
       "bold": true,
       "alignment": "center",
       "text_case": "uppercase",
       "multi_line_spacing": 1.0,
+      "space_before_pt": 6,
+      "space_after_pt": 6,
       "start_on_new_page": true
     },
     "section_title": {
       "format_example": "1.1 Название параграфа",
       "font_name": "Times New Roman",
-      "font_size_pt": 14,
+      "font_size_pt": 18,
       "bold": true,
       "alignment": "left",
       "text_case": "sentence_case",
-      "multi_line_spacing": 1.0
+      "multi_line_spacing": 1.0,
+      "space_before_pt": 6,
+      "space_after_pt": 6
     },
     "subsection_title": {
       "format_example": "1.1.1 Название подпункта",
       "font_name": "Times New Roman",
-      "font_size_pt": 14,
+      "font_size_pt": 16,
       "bold": true,
       "alignment": "left",
       "text_case": "sentence_case",
-      "multi_line_spacing": 1.0
+      "multi_line_spacing": 1.0,
+      "space_before_pt": 6,
+      "space_after_pt": 6
     }
   },
   "table_rules": {
@@ -520,7 +528,7 @@
     "7. Сформировать структуру документа под конкретный профиль работы без вымышленных разделов, технологий и результатов.",
     "8. Сначала написать содержание разделов, затем применить форматирование по шаблону и ГОСТ.",
     "9. Сгенерировать автоматическое оглавление и проверить, что его записи оформлены согласно шаблону и выбранной методичке.",
-    "10. Проверить нумерацию страниц: титульный лист и содержание входят в счет, но номер на них не печатается; видимая нумерация начинается со введения или первого разрешенного методичкой структурного элемента.",
+    "10. Проверить нумерацию страниц: титульный лист и содержание входят в счет, но номер на них не печатается; видимая нумерация начинается с первого разрешенного методичкой структурного элемента после содержания.",
     "11. Разместить таблицы, рисунки и скриншоты после первого упоминания в тексте и добавить корректные подписи.",
     "12. Перенести листинги кода, громоздкие SQL-фрагменты, схемы и вспомогательные материалы в приложения.",
     "13. Обновить все поля Word: оглавление, номера страниц, перекрестные ссылки при наличии.",
@@ -531,14 +539,15 @@
     "Если пользователь написал только «ВКР», уточнение профиля выполнено до начала оформления.",
     "В титульных и сопроводительных элементах не подставлены случайные ФИО, вуз, кафедра или иные реквизиты из чужих образцов.",
     "Если реквизиты не были предоставлены, в универсальном шаблоне оставлены понятные плейсхолдеры.",
-    "Документ создан именно из пользовательского шаблона .dotm.",
+    "Документ создан именно из пользовательского шаблона .dotx или .dotm.",
     "Основной текст оформлен Times New Roman 14 pt, межстрочный интервал 1,5, абзац 1,25 см, выравнивание по ширине.",
     "Оглавление оформлено Times New Roman 14 pt, межстрочный интервал 1,5, а не стандартным стилем Word.",
     "Титульный лист и содержание есть, но номера страниц на них не печатаются.",
     "Нумерация видна с введения и расположена внизу справа шрифтом 10 pt.",
     "Каждая глава начинается с новой страницы.",
-    "Заголовки глав по центру, полужирные, прописными буквами.",
-    "Заголовки параграфов полужирные, строчные с первой прописной.",
+    "Заголовки глав по центру, полужирные, прописными буквами, с интервалами 6 pt до и после.",
+    "Заголовки параграфов полужирные, строчные с первой прописной, с интервалами 6 pt до и после.",
+    "РЕФЕРАТ, ВВЕДЕНИЕ, ЗАКЛЮЧЕНИЕ, СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ и ПРИЛОЖЕНИЯ оформлены как заголовки главы без сквозной нумерации и в том же регистре, что и заголовок главы текущего профиля.",
     "Все таблицы и рисунки имеют ссылки в тексте и сквозную нумерацию.",
     "Подписи таблиц и рисунков соответствуют методичке.",
     "Приложения начинаются с новой страницы и имеют буквенное обозначение.",
@@ -546,7 +555,8 @@
     "Для дипломного проекта СПО сохранена четырехглавая структура с обязательной экономической главой.",
     "Для ВКР магистратуры добавлены реферат, профильные разделы и соблюден минимум источников, если он обязателен методичкой.",
     "В тексте нет вымышленных функций, технологий, API, модулей, тестов и результатов.",
-    "Оглавление обновлено и совпадает с реальной пагинацией документа."
+    "Оглавление обновлено и совпадает с реальной пагинацией документа.",
+    "В PDF-версии нет ошибок Word вида «Ошибка! Закладка не определена.» в оглавлении."
   ],
   "strict_prohibitions": [
     "Не выбирать магистерский профиль только по слову «ВКР» без проверки уровня образования.",
