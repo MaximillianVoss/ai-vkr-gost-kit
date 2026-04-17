@@ -1822,7 +1822,7 @@ def _route_with_obstacles(
         (_almost_equal(start[0], end[0]) or _almost_equal(start[1], end[1]))
         and _path_is_clear([start, end], obstacles, start_exclude, end_exclude)
     ):
-        return [start, end]
+        return _finalize_route([start, end], source_side, target_side, obstacles, start_exclude, end_exclude)
 
     exit_distance = ROUTE_MARGIN
     start_exit = _shift_point(start, source_side, exit_distance)
@@ -1841,9 +1841,16 @@ def _route_with_obstacles(
             preferences=preferences,
         )
         if core_path is not None:
-            return _simplify_path([start, *core_path, end])
+            return _finalize_route([start, *core_path, end], source_side, target_side, obstacles, start_exclude, end_exclude)
 
-    return _simplify_path(_orthogonal_route(start, end, source_side, target_side, loop_offset=52))
+    return _finalize_route(
+        _orthogonal_route(start, end, source_side, target_side, loop_offset=52),
+        source_side,
+        target_side,
+        obstacles,
+        start_exclude,
+        end_exclude,
+    )
 
 
 def _graph_route(
@@ -2108,6 +2115,119 @@ def _path_is_clear(
     return True
 
 
+def _finalize_route(
+    points: list[tuple[float, float]],
+    source_side: str,
+    target_side: str,
+    obstacles: dict[str, Bounds],
+    start_exclude: str | None,
+    end_exclude: str | None,
+) -> list[tuple[float, float]]:
+    base_path = _simplify_path(points)
+    normalized = _normalize_route_start(points, source_side)
+    normalized = _normalize_route_end(normalized, target_side)
+    normalized = _simplify_path(normalized, source_side=source_side, target_side=target_side)
+    try:
+        _validate_route_shape(normalized)
+        _validate_route_terminals(normalized, source_side, target_side)
+        _validate_no_redundant_points(normalized, source_side=source_side, target_side=target_side)
+        if not _path_is_clear(normalized, obstacles, start_exclude, end_exclude):
+            raise ValueError("Route intersects an obstacle after terminal normalization")
+        return normalized
+    except ValueError:
+        _validate_route_shape(base_path)
+        _validate_no_redundant_points(base_path)
+        return base_path
+
+
+def _normalize_route_start(
+    points: list[tuple[float, float]],
+    side: str,
+    distance: float = ROUTE_MARGIN,
+) -> list[tuple[float, float]]:
+    if len(points) < 2 or _segment_matches_side(points[0], points[1], side):
+        return points
+
+    start = points[0]
+    nxt = points[1]
+    start_exit = _shift_point(start, side, distance)
+    normalized = [start]
+    _append_unique_point(normalized, start_exit)
+    if side in {"top", "bottom"}:
+        _append_unique_point(normalized, (nxt[0], start_exit[1]))
+    else:
+        _append_unique_point(normalized, (start_exit[0], nxt[1]))
+    for point in points[1:]:
+        _append_unique_point(normalized, point)
+    return normalized
+
+
+def _normalize_route_end(
+    points: list[tuple[float, float]],
+    side: str,
+    distance: float = ROUTE_MARGIN,
+) -> list[tuple[float, float]]:
+    if len(points) < 2 or _segment_enters_side(points[-2], points[-1], side):
+        return points
+
+    end = points[-1]
+    prev = points[-2]
+    end_entry = _shift_point(end, side, distance)
+    normalized = list(points[:-1])
+    if side in {"top", "bottom"}:
+        _append_unique_point(normalized, (prev[0], end_entry[1]))
+        _append_unique_point(normalized, end_entry)
+    else:
+        _append_unique_point(normalized, (end_entry[0], prev[1]))
+        _append_unique_point(normalized, end_entry)
+    _append_unique_point(normalized, end)
+    return normalized
+
+
+def _append_unique_point(points: list[tuple[float, float]], point: tuple[float, float]) -> None:
+    if not points:
+        points.append(point)
+        return
+    last = points[-1]
+    if _almost_equal(last[0], point[0]) and _almost_equal(last[1], point[1]):
+        return
+    points.append(point)
+
+
+def _validate_route_shape(points: list[tuple[float, float]]) -> None:
+    if len(points) < 2:
+        raise ValueError("Route must contain at least two points")
+    for start, end in zip(points, points[1:]):
+        if _almost_equal(start[0], end[0]) and _almost_equal(start[1], end[1]):
+            raise ValueError("Route contains a zero-length segment")
+        if not (_almost_equal(start[0], end[0]) or _almost_equal(start[1], end[1])):
+            raise ValueError("Route contains a diagonal segment")
+
+
+def _validate_route_terminals(points: list[tuple[float, float]], source_side: str, target_side: str) -> None:
+    if not _segment_matches_side(points[0], points[1], source_side):
+        raise ValueError(f"Route leaves source on the wrong side: expected {source_side}")
+    if not _segment_enters_side(points[-2], points[-1], target_side):
+        raise ValueError(f"Route enters target on the wrong side: expected {target_side}")
+
+
+def _validate_no_redundant_points(
+    points: list[tuple[float, float]],
+    *,
+    source_side: str | None = None,
+    target_side: str | None = None,
+) -> None:
+    for index, (first, middle, last) in enumerate(zip(points, points[1:], points[2:]), start=1):
+        if (_almost_equal(first[0], middle[0]) and _almost_equal(middle[0], last[0])) or (
+            _almost_equal(first[1], middle[1]) and _almost_equal(middle[1], last[1])
+        ):
+            if index == 1 and source_side and _segment_matches_side(first, middle, source_side):
+                continue
+            if index == len(points) - 2 and target_side and _segment_enters_side(middle, last, target_side):
+                continue
+            raise ValueError("Route contains a redundant collinear point")
+
+
 def _segment_intersects_bounds(
     start: tuple[float, float],
     end: tuple[float, float],
@@ -2132,28 +2252,58 @@ def _segment_intersects_bounds(
     return True
 
 
-def _simplify_path(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
+def _simplify_path(
+    points: list[tuple[float, float]],
+    *,
+    source_side: str | None = None,
+    target_side: str | None = None,
+) -> list[tuple[float, float]]:
     deduped: list[tuple[float, float]] = []
     for point in points:
         if not deduped or not (_almost_equal(point[0], deduped[-1][0]) and _almost_equal(point[1], deduped[-1][1])):
             deduped.append(point)
 
-    simplified: list[tuple[float, float]] = []
-    for point in deduped:
-        simplified.append(point)
-        while len(simplified) >= 3:
-            a, b, c = simplified[-3:]
-            if (_almost_equal(a[0], b[0]) and _almost_equal(b[0], c[0])) or (
-                _almost_equal(a[1], b[1]) and _almost_equal(b[1], c[1])
-            ):
-                simplified.pop(-2)
-            else:
-                break
+    simplified = list(deduped)
+    index = 1
+    while index < len(simplified) - 1:
+        a, b, c = simplified[index - 1], simplified[index], simplified[index + 1]
+        collinear = (_almost_equal(a[0], b[0]) and _almost_equal(b[0], c[0])) or (
+            _almost_equal(a[1], b[1]) and _almost_equal(b[1], c[1])
+        )
+        if not collinear:
+            index += 1
+            continue
+        if index == 1 and source_side and not _segment_matches_side(a, c, source_side):
+            index += 1
+            continue
+        if index == len(simplified) - 2 and target_side and not _segment_enters_side(a, c, target_side):
+            index += 1
+            continue
+        simplified.pop(index)
+        if index > 1:
+            index -= 1
     return simplified
 
 
 def _path_length(points: list[tuple[float, float]]) -> float:
     return sum(abs(end[0] - start[0]) + abs(end[1] - start[1]) for start, end in zip(points, points[1:]))
+
+
+def _segment_matches_side(start: tuple[float, float], end: tuple[float, float], side: str) -> bool:
+    if side == "top":
+        return _almost_equal(start[0], end[0]) and end[1] < start[1]
+    if side == "bottom":
+        return _almost_equal(start[0], end[0]) and end[1] > start[1]
+    if side == "left":
+        return _almost_equal(start[1], end[1]) and end[0] < start[0]
+    if side == "right":
+        return _almost_equal(start[1], end[1]) and end[0] > start[0]
+    raise ValueError(f"Unsupported route side '{side}'")
+
+
+def _segment_enters_side(start: tuple[float, float], end: tuple[float, float], side: str) -> bool:
+    opposite = {"top": "bottom", "bottom": "top", "left": "right", "right": "left"}
+    return _segment_matches_side(start, end, opposite[side])
 
 
 def _role_to_side(role: str | None, target: bool) -> str | None:

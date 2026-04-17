@@ -20,6 +20,9 @@ from schemegen.svg_renderer import (
     _idef_page_bounds,
     _layout_nodes,
     _recenter_single_idef_box,
+    _route_with_obstacles,
+    _segment_enters_side,
+    _segment_matches_side,
     _segment_intersects_bounds,
     render_svg,
 )
@@ -232,6 +235,54 @@ class SvgRendererTests(unittest.TestCase):
                     continue
                 bounds = Bounds(box.x, box.y, box.x + box.width, box.y + box.height)
                 self.assertFalse(_segment_intersects_bounds(segment_start, segment_end, bounds), node_id)
+
+    def test_route_with_obstacles_preserves_terminal_orientation_for_all_sides(self) -> None:
+        obstacle = {"block": Bounds(600, 220, 660, 280)}
+        cases = [
+            ("top", (540.0, 195.0), (700.0, 340.0), "right", "top"),
+            ("bottom", (540.0, 360.0), (700.0, 220.0), "right", "bottom"),
+            ("left", (540.0, 195.0), (700.0, 340.0), "bottom", "left"),
+            ("right", (540.0, 195.0), (700.0, 340.0), "top", "right"),
+        ]
+
+        for name, start, end, source_side, target_side in cases:
+            with self.subTest(side=name):
+                points = _route_with_obstacles(
+                    start,
+                    end,
+                    source_side,
+                    target_side,
+                    obstacle,
+                )
+                self.assertTrue(_segment_matches_side(points[0], points[1], source_side))
+                self.assertTrue(_segment_enters_side(points[-2], points[-1], target_side))
+
+    def test_route_with_obstacles_avoids_direct_shortcut_when_terminal_sides_disagree(self) -> None:
+        points = _route_with_obstacles(
+            (100.0, 100.0),
+            (100.0, 300.0),
+            "right",
+            "left",
+            {"dummy": Bounds(1000, 1000, 1100, 1100)},
+        )
+        self.assertGreater(len(points), 2)
+        self.assertTrue(_segment_matches_side(points[0], points[1], "right"))
+        self.assertTrue(_segment_enters_side(points[-2], points[-1], "left"))
+
+    def test_route_with_obstacles_removes_redundant_terminal_stub_regression(self) -> None:
+        points = _route_with_obstacles(
+            (540.0, 195.0),
+            (700.0, 340.0),
+            "right",
+            "top",
+            {"block": Bounds(600, 220, 660, 280)},
+        )
+        for first, middle, last in zip(points, points[1:], points[2:]):
+            self.assertFalse(
+                (first[0] == middle[0] == last[0]) or (first[1] == middle[1] == last[1])
+            )
+        self.assertEqual(points[-1], (700.0, 340.0))
+        self.assertEqual(points[-2][0], 700.0)
 
     def test_idef0_feedback_route_uses_top_corridor(self) -> None:
         document = load_document_file(ROOT / "examples" / "test_progression.json")
