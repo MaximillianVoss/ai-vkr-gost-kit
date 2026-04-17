@@ -384,6 +384,164 @@
       ]
     },
     {
+      "id": "flow_05_multi_cycle_review",
+      "title": "05. Блок-схема с несколькими циклами",
+      "description": "Стресс-тест для возвратов, боковых ветвей и длинной обратной связи",
+      "type": "flowchart",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Начало",
+          "kind": "start",
+          "row": 0,
+          "column": 1
+        },
+        {
+          "id": "collect",
+          "label": "Получить очередной комплект данных",
+          "kind": "process",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "data_ok",
+          "label": "Исходные данные полны?",
+          "kind": "decision",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "request_fix",
+          "label": "Запросить уточнение",
+          "kind": "data",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "prepare",
+          "label": "Подготовить пакет на проверку",
+          "kind": "process",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "review",
+          "label": "Провести экспертную проверку",
+          "kind": "predefined_process",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "id": "approved",
+          "label": "Замечания устранены?",
+          "kind": "decision",
+          "row": 5,
+          "column": 1
+        },
+        {
+          "id": "revise",
+          "label": "Доработать пакет",
+          "kind": "process",
+          "row": 5,
+          "column": 2
+        },
+        {
+          "id": "publish",
+          "label": "Зафиксировать итоговый вариант",
+          "kind": "document",
+          "row": 6,
+          "column": 1
+        },
+        {
+          "id": "more_docs",
+          "label": "Есть еще комплекты?",
+          "kind": "decision",
+          "row": 7,
+          "column": 1
+        },
+        {
+          "id": "finish",
+          "label": "Конец",
+          "kind": "end",
+          "row": 8,
+          "column": 1
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "start",
+          "target": "collect"
+        },
+        {
+          "id": "e2",
+          "source": "collect",
+          "target": "data_ok"
+        },
+        {
+          "id": "e3",
+          "source": "data_ok",
+          "target": "request_fix",
+          "label": "Нет"
+        },
+        {
+          "id": "e4",
+          "source": "request_fix",
+          "target": "collect"
+        },
+        {
+          "id": "e5",
+          "source": "data_ok",
+          "target": "prepare",
+          "label": "Да"
+        },
+        {
+          "id": "e6",
+          "source": "prepare",
+          "target": "review"
+        },
+        {
+          "id": "e7",
+          "source": "review",
+          "target": "approved"
+        },
+        {
+          "id": "e8",
+          "source": "approved",
+          "target": "revise",
+          "label": "Нет"
+        },
+        {
+          "id": "e9",
+          "source": "revise",
+          "target": "prepare"
+        },
+        {
+          "id": "e10",
+          "source": "approved",
+          "target": "publish",
+          "label": "Да"
+        },
+        {
+          "id": "e11",
+          "source": "publish",
+          "target": "more_docs"
+        },
+        {
+          "id": "e12",
+          "source": "more_docs",
+          "target": "collect",
+          "label": "Да"
+        },
+        {
+          "id": "e13",
+          "source": "more_docs",
+          "target": "finish",
+          "label": "Нет"
+        }
+      ]
+    },
+    {
       "id": "idef0_04_context",
       "title": "04. IDEF0 контекст A0",
       "description": "Контекстная диаграмма системы обработки учебных задач",
@@ -396,6 +554,8 @@
         "status": "Черновик",
         "reader": "Преподаватель",
         "context": "ВЕРХ",
+        "purpose": "Автоматизировать подготовку решений, схем и отчетных материалов для учебной работы.",
+        "viewpoint": "Студент, оформляющий работу по ГОСТ с помощью ИИ-агента.",
         "notes": "0 1 2 3 4 5 6 7 8 9",
         "page": "1",
         "node_ref": "A0"
@@ -696,6 +856,286 @@
           "role": "output",
           "icom": "O1",
           "label": "Решения и схемы"
+        }
+      ]
+    },
+    {
+      "id": "idef0_05b_reference_layout",
+      "title": "05b. IDEF0 референсная декомпозиция",
+      "description": "Пятиблочная тестовая декомпозиция с выраженной диагональю и grouped boundary arrows",
+      "type": "idef0",
+      "frame": {
+        "author": "ИИ-агент",
+        "project": "Демонстрационный набор SchemeGen",
+        "date": "16.04.2026",
+        "revision": "1",
+        "status": "Рабочий проект",
+        "reader": "Руководитель",
+        "context": "A3",
+        "notes": "1 2 3 4 5",
+        "page": "2b",
+        "node_ref": "A3"
+      },
+      "nodes": [
+        {
+          "id": "capture_requirements",
+          "label": "Собрать исходные требования",
+          "kind": "function",
+          "code": "A31",
+          "row": 1,
+          "column": 0
+        },
+        {
+          "id": "analyze_constraints",
+          "label": "Выделить ограничения и критерии",
+          "kind": "function",
+          "code": "A32",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "prepare_assets",
+          "label": "Подготовить схемы и артефакты",
+          "kind": "function",
+          "code": "A33",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "id": "review_package",
+          "label": "Проверить полноту комплекта",
+          "kind": "function",
+          "code": "A34",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "id": "publish_package",
+          "label": "Передать комплект пользователю",
+          "kind": "function",
+          "code": "A35",
+          "row": 1,
+          "column": 4
+        }
+      ],
+      "edges": [
+        {
+          "id": "ref_input_main",
+          "source": null,
+          "target": "capture_requirements",
+          "role": "input",
+          "icom": "I1",
+          "label": "Исходные материалы"
+        },
+        {
+          "id": "ref_input_secondary",
+          "source": null,
+          "target": "analyze_constraints",
+          "role": "input",
+          "icom": "I1",
+          "label": "Исходные материалы"
+        },
+        {
+          "id": "ref_control_rules",
+          "source": null,
+          "target": "analyze_constraints",
+          "role": "control",
+          "icom": "C1",
+          "label": "ГОСТ и методичка"
+        },
+        {
+          "id": "ref_control_review",
+          "source": null,
+          "target": "review_package",
+          "role": "control",
+          "icom": "C1",
+          "label": "ГОСТ и методичка"
+        },
+        {
+          "id": "ref_mechanism_author",
+          "source": null,
+          "target": "capture_requirements",
+          "role": "mechanism",
+          "icom": "M1",
+          "label": "Студент и агент"
+        },
+        {
+          "id": "ref_mechanism_tools",
+          "source": null,
+          "target": "prepare_assets",
+          "role": "mechanism",
+          "icom": "M1",
+          "label": "Студент и агент"
+        },
+        {
+          "id": "ref_a31_a32",
+          "source": "capture_requirements",
+          "target": "analyze_constraints",
+          "label": "Структурированные требования"
+        },
+        {
+          "id": "ref_a32_a33",
+          "source": "analyze_constraints",
+          "target": "prepare_assets",
+          "label": "Ограничения и шаблоны"
+        },
+        {
+          "id": "ref_a33_a34",
+          "source": "prepare_assets",
+          "target": "review_package",
+          "label": "Схемы и текст"
+        },
+        {
+          "id": "ref_a34_a35",
+          "source": "review_package",
+          "target": "publish_package",
+          "label": "Проверенный комплект"
+        },
+        {
+          "id": "ref_feedback",
+          "source": "publish_package",
+          "target": "prepare_assets",
+          "source_side": "top",
+          "target_side": "top",
+          "label": "Замечания"
+        },
+        {
+          "id": "ref_output_main",
+          "source": "publish_package",
+          "target": null,
+          "role": "output",
+          "icom": "O1",
+          "label": "Готовый комплект"
+        },
+        {
+          "id": "ref_output_copy",
+          "source": "review_package",
+          "target": null,
+          "role": "output",
+          "icom": "O1",
+          "label": "Готовый комплект"
+        }
+      ]
+    },
+    {
+      "id": "idef0_05c_line_jumps",
+      "title": "05c. IDEF0 с пересечениями стрелок",
+      "description": "Тестовая IDEF0-схема для проверки line jump на ортогональных пересечениях",
+      "type": "idef0",
+      "frame": {
+        "author": "ИИ-агент",
+        "project": "Демонстрационный набор SchemeGen",
+        "date": "16.04.2026",
+        "revision": "1",
+        "status": "Тест трассировки",
+        "reader": "Руководитель",
+        "context": "A4",
+        "notes": "jumps 1 2 3",
+        "page": "2c",
+        "node_ref": "A4"
+      },
+      "nodes": [
+        {
+          "id": "left_stage",
+          "label": "Подготовить исходные требования",
+          "kind": "function",
+          "code": "A41",
+          "row": 0,
+          "column": 0,
+          "x": 260,
+          "y": 360
+        },
+        {
+          "id": "top_stage",
+          "label": "Согласовать стандарты и ограничения",
+          "kind": "function",
+          "code": "A42",
+          "row": 0,
+          "column": 1,
+          "x": 520,
+          "y": 190
+        },
+        {
+          "id": "right_stage",
+          "label": "Собрать проектное решение",
+          "kind": "function",
+          "code": "A43",
+          "row": 0,
+          "column": 2,
+          "x": 780,
+          "y": 360
+        },
+        {
+          "id": "bottom_stage",
+          "label": "Проверить и выпустить комплект",
+          "kind": "function",
+          "code": "A44",
+          "row": 0,
+          "column": 3,
+          "x": 520,
+          "y": 530
+        }
+      ],
+      "edges": [
+        {
+          "id": "jump_input",
+          "source": null,
+          "target": "left_stage",
+          "role": "input",
+          "icom": "I1",
+          "label": "Формализованные требования"
+        },
+        {
+          "id": "jump_control",
+          "source": null,
+          "target": "top_stage",
+          "role": "control",
+          "icom": "C1",
+          "label": "Стандарты проектирования"
+        },
+        {
+          "id": "jump_mechanism",
+          "source": null,
+          "target": "bottom_stage",
+          "role": "mechanism",
+          "icom": "M1",
+          "label": "Команда проекта"
+        },
+        {
+          "id": "jump_horizontal",
+          "source": "left_stage",
+          "target": "right_stage",
+          "source_side": "right",
+          "target_side": "left",
+          "label": "Согласованные требования"
+        },
+        {
+          "id": "jump_vertical",
+          "source": "top_stage",
+          "target": "bottom_stage",
+          "source_side": "bottom",
+          "target_side": "top",
+          "label": "Правила проверки"
+        },
+        {
+          "id": "jump_diag_1",
+          "source": "left_stage",
+          "target": "bottom_stage",
+          "label": "Комплект данных"
+        },
+        {
+          "id": "jump_diag_2",
+          "source": "top_stage",
+          "target": "right_stage",
+          "label": "Архитектурные ограничения"
+        },
+        {
+          "id": "jump_output",
+          "source": "right_stage",
+          "target": null,
+          "role": "output",
+          "icom": "O1",
+          "label": "Подготовленное решение"
         }
       ]
     },

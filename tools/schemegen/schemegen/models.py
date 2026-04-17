@@ -146,6 +146,8 @@ class Idef0Frame:
     status: str | None = None
     reader: str | None = None
     context: str | None = None
+    purpose: str | None = None
+    viewpoint: str | None = None
     notes: str | None = None
     page: str | None = None
     node_ref: str | None = None
@@ -496,6 +498,8 @@ def _load_frame(raw_frame: object, diagram_type: str, path: str) -> Idef0Frame |
         status=_get_string(raw_frame, "status", path, required=False),
         reader=_get_string(raw_frame, "reader", path, required=False),
         context=_get_string(raw_frame, "context", path, required=False),
+        purpose=_get_string(raw_frame, "purpose", path, required=False),
+        viewpoint=_get_string(raw_frame, "viewpoint", path, required=False),
         notes=_get_string(raw_frame, "notes", path, required=False),
         page=_get_string(raw_frame, "page", path, required=False),
         node_ref=_get_string(raw_frame, "node_ref", path, required=False),

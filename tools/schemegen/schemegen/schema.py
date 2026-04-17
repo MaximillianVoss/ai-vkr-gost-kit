@@ -65,6 +65,8 @@ DOCUMENT_SCHEMA = {
                             "status": {"type": "string"},
                             "reader": {"type": "string"},
                             "context": {"type": "string"},
+                            "purpose": {"type": "string"},
+                            "viewpoint": {"type": "string"},
                             "notes": {"type": "string"},
                             "page": {"type": "string"},
                             "node_ref": {"type": "string"},
