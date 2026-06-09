@@ -1,5 +1,22 @@
 # AI VKR / DP GOST Kit
 
+<!-- codex-repo-note:start -->
+## Справка о репозитории / Repository note
+
+**RU:** AI-набор для подготовки пояснительных записок ВКР/курсовых по ГОСТ.
+
+**EN:** an AI toolkit for preparing GOST-style VKR/course-project explanatory notes.
+
+**Статус / Status:** активный шаблонный проект 2026 года; используется как опорный репозиторий для документов. / active 2026 template project; used as the reference repository for documents.
+
+**Текущее имя / Current name:** `ai-vkr-gost-kit`
+
+**Плановое имя / Planned name:** `ai-vkr-gost-kit`
+
+**Topics:** `ai`, `cleanup-pending`, `documentation`, `gost`, `needs-review`, `python`, `status-active`, `type-template`, `vkr`
+<!-- codex-repo-note:end -->
+
+
 Самодостаточный комплект для ИИ-агента, который должен готовить и оформлять ВКР, дипломный проект или пояснительную записку по пользовательскому шаблону Word и ГОСТ с явным выбором профильной методички.
 
 Состав:
