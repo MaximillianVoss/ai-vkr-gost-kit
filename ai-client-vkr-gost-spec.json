@@ -41,7 +41,8 @@
       "python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --macro \"NormalizePageNumbers\" --macro \"AlignTablesAndFigures\"",
       "python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --insert-placeholder-captions --strip-heading-numbering",
       "python word_agent_toolkit.py append-code-appendix --input tmp/docs/new-note.docx --source path/to/source-file.cs --title \"Листинг кода основного модуля\" --label А",
-      "python word_agent_toolkit.py summarize-doc --input tmp/docs/new-note.docx"
+      "python word_agent_toolkit.py summarize-doc --input tmp/docs/new-note.docx",
+      "python word_agent_toolkit.py generate-project-artifacts --template \"C:/path/to/your-template.dotx\" --manifest examples/project_artifacts_manifest.json --output-dir tmp/docs/project-artifacts --with-pdf"
     ]
   },
   "supported_document_types": [
@@ -571,5 +572,18 @@
     "Не вставлять скриншоты, таблицы и рисунки без описания в тексте.",
     "Не размещать большие листинги кода в основной части работы, если их можно вынести в приложения.",
     "Не ломать стили пользовательского шаблона без необходимости."
-  ]
+  ],
+  "project_artifact_generation": {
+    "purpose": "Генерация вспомогательных материалов для пояснительной записки, практики или демонстрационного экзамена по JSON manifest.",
+    "command": "generate-project-artifacts",
+    "manifest_example": "examples/project_artifacts_manifest.json",
+    "supported_outputs": [
+      "DOCX-отчет со скриншотами",
+      "DOCX с тестовыми сценариями",
+      "DOCX summary-отчеты с разделами и таблицами",
+      "редактируемая .drawio диаграмма прецедентов"
+    ],
+    "pdf_rule": "DOCX-отчеты экспортируются в PDF флагом --with-pdf через Word COM; .drawio нужно экспортировать в PDF отдельным инструментом diagrams.net.",
+    "style_rule": "DOCX-артефакты создаются на базе пользовательского Word-шаблона и проходят ГОСТ-постобработку toolkit."
+  }
 }

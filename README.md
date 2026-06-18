@@ -23,6 +23,7 @@
 - `word_agent_toolkit.py` - автономный CLI для работы с `.dotx/.dotm/.docx/.docm`: создание документа из шаблона, применение ГОСТ-профиля, обновление оглавления, экспорт PDF, добавление приложения с листингом и явный запуск VBA-макросов через Word COM.
 - `ai-client-vkr-gost-spec.json` - машиночитаемый профиль с маршрутами выбора между дипломным проектом СПО и ВКР магистратуры.
 - `AGENT_PROMPTS_RU.md` - готовые prompt-шаблоны, которые можно отправлять другому ИИ-агенту вместе со ссылкой на репозиторий.
+- `examples/project_artifacts_manifest.json` - пример manifest для генерации проектных артефактов: отчетов со скриншотами, тестовых сценариев, summary-отчетов и drawio-диаграммы прецедентов.
 - `Профиль для ИИ агента - ВКР и ДП по ГОСТ.docx` - редактируемый Word-образец, который можно открыть, поправить и затем передать другому ИИ.
 - `Профиль для ИИ агента - ВКР и ДП по ГОСТ.pdf` - PDF-предпросмотр того же образца.
 
@@ -70,6 +71,14 @@ python -m pip install -r requirements.txt
 - Тестовые образцы строятся с отдельными секциями для титульного листа, содержания и основного текста, поэтому номер страницы не печатается на титуле и содержании, но появляется с `Реферата` как страница `3`.
 - По умолчанию документы складываются в папку `test`, а при флаге `--with-pdf` рядом создаются PDF-предпросмотры.
 
+Как генерировать проектные артефакты:
+
+- Команда `generate-project-artifacts` принимает JSON manifest и создает набор вспомогательных материалов для пояснительной записки, практики или демонстрационного экзамена.
+- Поддерживаются DOCX-отчет со скриншотами, DOCX с тестовыми сценариями, произвольные summary-отчеты с разделами/таблицами и `.drawio`-диаграмма прецедентов.
+- DOCX создаются на базе пользовательского Word-шаблона и затем проходят ГОСТ-постобработку.
+- Флаг `--with-pdf` экспортирует DOCX-отчеты в PDF через Word COM. `.drawio` остается редактируемым исходником диаграммы, PDF для него нужно экспортировать из diagrams.net или отдельного инструмента.
+- Пример входного manifest находится в `examples/project_artifacts_manifest.json`.
+
 Как выбирать методичку:
 
 - `МУ к ДП.pdf`: использовать для дипломного проекта или ВКР СПО, когда работа относится к колледжу/техникуму и имеет четырехглавую прикладную структуру с обязательной экономической главой.
@@ -94,4 +103,5 @@ python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --macro
 python word_agent_toolkit.py refresh-fields --input tmp/docs/new-note.docx --spec ai-client-vkr-gost-spec.json --builtin-layout
 python word_agent_toolkit.py finalize-doc --input tmp/docs/new-note.docx --insert-placeholder-captions --strip-heading-numbering
 python word_agent_toolkit.py generate-sample-vkrs --template "C:\path\to\your-template.dotx" --output-dir test --with-pdf
+python word_agent_toolkit.py generate-project-artifacts --template "C:\path\to\your-template.dotx" --manifest examples/project_artifacts_manifest.json --output-dir tmp/docs/project-artifacts --with-pdf
 ```

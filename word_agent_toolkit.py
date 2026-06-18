@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import re
 from pathlib import Path
@@ -1270,6 +1271,311 @@ def add_heading(
     )
 
 
+def add_gost_table(
+    document: Document,
+    body_style_name: str,
+    headers: list[str],
+    rows: list[list[Any]],
+    *,
+    table_font_size_pt: float = 12,
+) -> Any:
+    table = document.add_table(rows=1, cols=len(headers))
+    table.style = "Table Grid"
+    all_rows = [headers] + [[str(value) for value in row] for row in rows]
+    for row_index, row_values in enumerate(all_rows):
+        cells = table.rows[row_index].cells if row_index == 0 else table.add_row().cells
+        for column_index, value in enumerate(row_values):
+            cells[column_index].text = value
+            for paragraph in cells[column_index].paragraphs:
+                paragraph.style = body_style_name
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                paragraph.paragraph_format.first_line_indent = None
+                paragraph.paragraph_format.line_spacing = 1
+                for run in paragraph.runs:
+                    apply_run_font(run, font_size_pt=table_font_size_pt, bold=row_index == 0)
+    return table
+
+
+def resolve_manifest_path(manifest_path: Path, value: str | None) -> Path | None:
+    if not value:
+        return None
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    return manifest_path.parent / path
+
+
+def normalize_manifest_steps(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return "\n".join(f"{index}. {item}" for index, item in enumerate(value, start=1))
+    return str(value)
+
+
+def add_manifest_screenshot(
+    document: Document,
+    body_style_name: str,
+    manifest_path: Path,
+    screenshot: dict[str, Any],
+    *,
+    max_width_cm: float = 16.0,
+) -> None:
+    image_path = resolve_manifest_path(manifest_path, screenshot.get("path"))
+    caption = screenshot.get("caption") or screenshot.get("title") or "Рисунок"
+    if image_path is None or not image_path.exists():
+        add_paragraph(
+            document,
+            body_style_name,
+            f"[Изображение не найдено: {screenshot.get('path', '')}]",
+            alignment="center",
+            first_line_indent_cm=None,
+            bold=True,
+        )
+        return
+
+    paragraph = document.add_paragraph()
+    paragraph.style = body_style_name
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    paragraph.paragraph_format.first_line_indent = None
+    paragraph.add_run().add_picture(str(image_path), width=Cm(max_width_cm))
+    add_paragraph(document, body_style_name, caption, alignment="center", first_line_indent_cm=None)
+
+
+def create_artifact_document_from_template(
+    template_path: Path,
+    output_path: Path,
+    spec_path: Path | None,
+    *,
+    macro_names: list[str] | None = None,
+) -> tuple[Document, dict[str, Any], str, str, str]:
+    spec = load_spec(spec_path)
+    create_docx_from_template(template_path, output_path, macro_names=macro_names)
+    apply_gost_profile(output_path, None, spec_path)
+    document = Document(str(output_path))
+    clear_document(document)
+    for section in document.sections:
+        set_default_section(section, spec)
+
+    style_map = spec["template_style_map"]
+    body_style = get_style_name(document, style_map["body"], "Normal")
+    chapter_style = get_style_name(document, style_map["chapter_title"], body_style)
+    section_style = get_style_name(document, style_map["section_title"], body_style)
+    return document, spec, body_style, chapter_style, section_style
+
+
+def build_manifest_screenshot_report(
+    template_path: Path,
+    output_path: Path,
+    manifest_path: Path,
+    manifest: dict[str, Any],
+    *,
+    spec_path: Path | None,
+    macro_names: list[str] | None = None,
+) -> Path:
+    report = manifest.get("screenshot_report") or {}
+    project = manifest.get("project") or {}
+    document, spec, body_style, chapter_style, section_style = create_artifact_document_from_template(
+        template_path,
+        output_path,
+        spec_path,
+        macro_names=macro_names,
+    )
+
+    add_heading(
+        document,
+        chapter_style,
+        report.get("title") or "ОТЧЕТ О ПРОВЕРКЕ РАБОТЫ СИСТЕМЫ",
+        outline_level=0,
+        alignment="center",
+    )
+    if project.get("title"):
+        add_paragraph(
+            document,
+            body_style,
+            f"Проект: {project['title']}.",
+            first_line_indent_cm=None,
+            bold=True,
+        )
+    if report.get("intro"):
+        add_paragraph(document, body_style, str(report["intro"]))
+
+    for index, screenshot in enumerate(report.get("screenshots", []), start=1):
+        if screenshot.get("section"):
+            add_heading(document, section_style, str(screenshot["section"]), outline_level=1, alignment="left")
+        if not screenshot.get("caption"):
+            screenshot["caption"] = f"Рисунок {index} - {screenshot.get('title', 'Скриншот работы системы')}"
+        add_manifest_screenshot(document, body_style, manifest_path, screenshot)
+
+    configure_page_numbering_sections(document, spec)
+    ensure_parent(output_path)
+    document.save(output_path)
+    refresh_fields(output_path, macro_names=macro_names, spec_path=spec_path, builtin_layout=True)
+    return output_path
+
+
+def build_manifest_test_scenarios(
+    template_path: Path,
+    output_path: Path,
+    manifest: dict[str, Any],
+    *,
+    spec_path: Path | None,
+    macro_names: list[str] | None = None,
+) -> Path:
+    project = manifest.get("project") or {}
+    scenarios = manifest.get("test_scenarios") or []
+    document, spec, body_style, chapter_style, section_style = create_artifact_document_from_template(
+        template_path,
+        output_path,
+        spec_path,
+        macro_names=macro_names,
+    )
+
+    add_heading(document, chapter_style, "ТЕСТОВЫЕ СЦЕНАРИИ", outline_level=0, alignment="center")
+    add_paragraph(
+        document,
+        body_style,
+        "Набор тестовых сценариев подготовлен для проверки основных ролей и функций информационной системы.",
+    )
+
+    for index, scenario in enumerate(scenarios, start=1):
+        number = str(scenario.get("number") or index)
+        title = str(scenario.get("title") or f"Тестовый сценарий №{number}")
+        add_heading(document, section_style, f"Тестовый сценарий №{number}. {title}", outline_level=1, alignment="left")
+        add_gost_table(
+            document,
+            body_style,
+            ["Поле", "Значение"],
+            [
+                ["Название проекта", project.get("title", "[НАЗВАНИЕ ПРОЕКТА]")],
+                ["Рабочая версия", project.get("version", "[ВЕРСИЯ]")],
+                ["Имя тестирующего", scenario.get("tester", "[ФИО тестирующего]")],
+                ["Дата теста", scenario.get("date", "[Дата]")],
+                ["Тестовый пример №", number],
+                ["Приоритет тестирования", scenario.get("priority", "Средний")],
+                ["Роль системы", scenario.get("role", "[Роль]")],
+                ["Заголовок/название теста", title],
+                ["Краткое изложение теста", scenario.get("summary", title)],
+                ["Этапы теста", normalize_manifest_steps(scenario.get("steps"))],
+                ["Тестовые данные", scenario.get("test_data", "")],
+                ["Ожидаемый результат", scenario.get("expected_result", "")],
+                ["Фактический результат", scenario.get("actual_result", "Соответствует ожидаемому результату.")],
+                ["Предварительное условие", scenario.get("precondition", "Приложение запущено, необходимые данные доступны.")],
+                ["Постусловие", scenario.get("postcondition", "Состояние системы соответствует ожидаемому результату.")],
+                ["Статус", scenario.get("status", "Зачет")],
+                ["Примечания/комментарии", scenario.get("notes", "")],
+            ],
+        )
+
+    configure_page_numbering_sections(document, spec)
+    ensure_parent(output_path)
+    document.save(output_path)
+    refresh_fields(output_path, macro_names=macro_names, spec_path=spec_path, builtin_layout=True)
+    return output_path
+
+
+def build_manifest_summary_report(
+    template_path: Path,
+    output_path: Path,
+    manifest_report: dict[str, Any],
+    *,
+    spec_path: Path | None,
+    macro_names: list[str] | None = None,
+) -> Path:
+    document, spec, body_style, chapter_style, section_style = create_artifact_document_from_template(
+        template_path,
+        output_path,
+        spec_path,
+        macro_names=macro_names,
+    )
+    add_heading(
+        document,
+        chapter_style,
+        manifest_report.get("title") or "ОТЧЕТ",
+        outline_level=0,
+        alignment="center",
+    )
+    for text in manifest_report.get("paragraphs", []):
+        add_paragraph(document, body_style, str(text))
+    for section in manifest_report.get("sections", []):
+        if section.get("heading"):
+            add_heading(document, section_style, str(section["heading"]), outline_level=1, alignment="left")
+        for text in section.get("paragraphs", []):
+            add_paragraph(document, body_style, str(text))
+        for table in section.get("tables", []):
+            add_gost_table(document, body_style, table.get("headers", []), table.get("rows", []))
+
+    configure_page_numbering_sections(document, spec)
+    ensure_parent(output_path)
+    document.save(output_path)
+    refresh_fields(output_path, macro_names=macro_names, spec_path=spec_path, builtin_layout=True)
+    return output_path
+
+
+def drawio_vertex(cell_id: str, label: str, style: str, x: int, y: int, width: int, height: int) -> str:
+    escaped_label = html.escape(label)
+    return (
+        f'<mxCell id="{cell_id}" value="{escaped_label}" style="{style}" vertex="1" parent="1">'
+        f'<mxGeometry x="{x}" y="{y}" width="{width}" height="{height}" as="geometry"/></mxCell>'
+    )
+
+
+def drawio_edge(edge_id: str, source: str, target: str, label: str = "") -> str:
+    escaped_label = html.escape(label)
+    return (
+        f'<mxCell id="{edge_id}" value="{escaped_label}" style="endArrow=none;html=1;rounded=0;" '
+        f'edge="1" parent="1" source="{source}" target="{target}">'
+        '<mxGeometry relative="1" as="geometry"/></mxCell>'
+    )
+
+
+def build_manifest_use_case_drawio(output_path: Path, manifest: dict[str, Any]) -> Path:
+    diagram = manifest.get("use_case_diagram") or {}
+    actors = diagram.get("actors", [])
+    use_cases = diagram.get("use_cases", [])
+    links = diagram.get("links", [])
+
+    cells = ['<mxCell id="0"/>', '<mxCell id="1" parent="0"/>']
+    actor_style = "shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;"
+    use_case_style = "ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;"
+
+    for index, actor in enumerate(actors):
+        cell_id = str(actor.get("id") or f"actor_{index + 1}")
+        x = int(actor.get("x", 40 if index % 2 == 0 else 850))
+        y = int(actor.get("y", 90 + (index // 2) * 135))
+        cells.append(drawio_vertex(cell_id, str(actor.get("name", cell_id)), actor_style, x, y, 90, 100))
+
+    for index, use_case in enumerate(use_cases):
+        cell_id = str(use_case.get("id") or f"use_case_{index + 1}")
+        x = int(use_case.get("x", 260 + (index % 2) * 260))
+        y = int(use_case.get("y", 80 + (index // 2) * 90))
+        cells.append(drawio_vertex(cell_id, str(use_case.get("name", cell_id)), use_case_style, x, y, 220, 58))
+
+    for index, link in enumerate(links):
+        cells.append(
+            drawio_edge(
+                str(link.get("id") or f"edge_{index + 1}"),
+                str(link["source"]),
+                str(link["target"]),
+                str(link.get("label", "")),
+            )
+        )
+
+    title = html.escape(diagram.get("title") or "Use Case")
+    xml = (
+        '<mxfile host="app.diagrams.net">'
+        f'<diagram name="{title}">'
+        '<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" '
+        'connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" '
+        'math="0" shadow="0">'
+        f'<root>{"".join(cells)}</root>'
+        '</mxGraphModel></diagram></mxfile>'
+    )
+    ensure_parent(output_path)
+    output_path.write_text(xml, encoding="utf-8")
+    return output_path
+
+
 def clear_story_container(container) -> None:
     for child in list(container._element):
         container._element.remove(child)
@@ -2392,6 +2698,131 @@ def build_agent_brief_document(
     return output_path
 
 
+def load_project_artifacts_manifest(manifest_path: Path) -> dict[str, Any]:
+    with manifest_path.open("r", encoding="utf-8") as file:
+        manifest = json.load(file)
+    if not isinstance(manifest, dict):
+        raise ValueError("Manifest проектных артефактов должен быть JSON-объектом.")
+    return manifest
+
+
+def resolve_output_path(output_dir: Path, value: str | None, default_name: str) -> Path:
+    path = Path(value or default_name)
+    if path.is_absolute():
+        return path
+    return output_dir / path
+
+
+def maybe_export_artifact_pdf(
+    docx_path: Path,
+    pdf_path: Path,
+    *,
+    macro_names: list[str] | None,
+    spec_path: Path | None,
+) -> Path:
+    export_pdf(
+        docx_path,
+        pdf_path,
+        macro_names=macro_names,
+        spec_path=spec_path,
+        builtin_layout=True,
+    )
+    return pdf_path
+
+
+def generate_project_artifacts(
+    template_path: Path,
+    manifest_path: Path,
+    output_dir: Path,
+    spec_path: Path | None,
+    *,
+    include_pdf: bool = False,
+    macro_names: list[str] | None = None,
+) -> dict[str, Any]:
+    manifest = load_project_artifacts_manifest(manifest_path)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    generated: list[dict[str, str]] = []
+
+    screenshot_report = manifest.get("screenshot_report")
+    if isinstance(screenshot_report, dict):
+        docx_path = resolve_output_path(
+            output_dir,
+            screenshot_report.get("output"),
+            "Отчет_о_проверке_работы_системы.docx",
+        )
+        build_manifest_screenshot_report(
+            template_path,
+            docx_path,
+            manifest_path,
+            manifest,
+            spec_path=spec_path,
+            macro_names=macro_names,
+        )
+        item = {"kind": "screenshot_report", "docx": str(docx_path)}
+        if include_pdf:
+            pdf_path = docx_path.with_suffix(".pdf")
+            maybe_export_artifact_pdf(docx_path, pdf_path, macro_names=macro_names, spec_path=spec_path)
+            item["pdf"] = str(pdf_path)
+        generated.append(item)
+
+    if isinstance(manifest.get("test_scenarios"), list):
+        scenarios_config = manifest.get("test_scenarios_config") or {}
+        docx_path = resolve_output_path(
+            output_dir,
+            scenarios_config.get("output") if isinstance(scenarios_config, dict) else None,
+            "Тестовые_сценарии.docx",
+        )
+        build_manifest_test_scenarios(
+            template_path,
+            docx_path,
+            manifest,
+            spec_path=spec_path,
+            macro_names=macro_names,
+        )
+        item = {"kind": "test_scenarios", "docx": str(docx_path)}
+        if include_pdf:
+            pdf_path = docx_path.with_suffix(".pdf")
+            maybe_export_artifact_pdf(docx_path, pdf_path, macro_names=macro_names, spec_path=spec_path)
+            item["pdf"] = str(pdf_path)
+        generated.append(item)
+
+    for index, report in enumerate(manifest.get("summary_reports", []), start=1):
+        if not isinstance(report, dict):
+            continue
+        default_name = f"{index:02d}_{sanitize_filename_component(report.get('title', 'report'))}.docx"
+        docx_path = resolve_output_path(output_dir, report.get("output"), default_name)
+        build_manifest_summary_report(
+            template_path,
+            docx_path,
+            report,
+            spec_path=spec_path,
+            macro_names=macro_names,
+        )
+        item = {"kind": "summary_report", "docx": str(docx_path)}
+        if include_pdf:
+            pdf_path = docx_path.with_suffix(".pdf")
+            maybe_export_artifact_pdf(docx_path, pdf_path, macro_names=macro_names, spec_path=spec_path)
+            item["pdf"] = str(pdf_path)
+        generated.append(item)
+
+    use_case_diagram = manifest.get("use_case_diagram")
+    if isinstance(use_case_diagram, dict):
+        drawio_path = resolve_output_path(
+            output_dir,
+            use_case_diagram.get("output"),
+            "Диаграмма_прецедентов.drawio",
+        )
+        build_manifest_use_case_drawio(drawio_path, manifest)
+        generated.append({"kind": "use_case_drawio", "drawio": str(drawio_path)})
+
+    return {
+        "template": str(template_path),
+        "manifest": str(manifest_path),
+        "output_dir": str(output_dir),
+        "documents": generated,
+    }
+
+
 def command_inspect_template(args: argparse.Namespace) -> None:
     save_json(inspect_word_package(args.template), args.output)
 
@@ -2502,6 +2933,18 @@ def command_generate_sample_vkrs(args: argparse.Namespace) -> None:
         macro_names=args.macro,
         insert_placeholder_captions=args.insert_placeholder_captions,
         strip_heading_numbering=args.strip_heading_numbering,
+    )
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+def command_generate_project_artifacts(args: argparse.Namespace) -> None:
+    result = generate_project_artifacts(
+        template_path=args.template,
+        manifest_path=args.manifest,
+        output_dir=args.output_dir,
+        spec_path=args.spec,
+        include_pdf=args.with_pdf,
+        macro_names=args.macro,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
@@ -2667,6 +3110,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="При генерации тестовых ВКР снимать автоматическую нумерацию Word у заголовков ГОСТ.",
     )
     sample_parser.set_defaults(func=command_generate_sample_vkrs)
+
+    artifacts_parser = subparsers.add_parser(
+        "generate-project-artifacts",
+        help=(
+            "Сгенерировать проектные артефакты по JSON manifest: отчет со скриншотами, "
+            "тестовые сценарии, summary-отчеты и drawio-диаграмму прецедентов."
+        ),
+    )
+    artifacts_parser.add_argument("--template", type=Path, required=True)
+    artifacts_parser.add_argument("--manifest", type=Path, required=True)
+    artifacts_parser.add_argument("--output-dir", type=Path, default=Path("tmp/docs/project-artifacts"))
+    artifacts_parser.add_argument("--spec", type=Path, default=DEFAULT_SPEC_PATH)
+    artifacts_parser.add_argument("--with-pdf", action="store_true")
+    add_macro_arguments(artifacts_parser)
+    artifacts_parser.set_defaults(func=command_generate_project_artifacts)
 
     return parser
 
