@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-15T04:45:00+03:00",
+  "note": "Git preserves names and bytes but not filesystem timestamps. The original UTC timestamps are recorded here for restoration.",
+  "originals": [
+    {
+      "fileName": "РисункиФорматирование.vb",
+      "originalPath": "C:\\Users\\FossW\\OneDrive\\Репетиторство\\РисункиФорматирование.vb",
+      "length": 2367,
+      "creationTimeUtc": "2024-11-18T18:59:31.7370201Z",
+      "lastWriteTimeUtc": "2024-11-18T19:00:18.0000000Z",
+      "sha256": "a69d538fb3a9cd68124dde2547b2623ed7e9cd8c2943c220682b0f27e355b7ed",
+      "disposition": "immutable historical source; superseded by ../GostFormatting.bas"
+    },
+    {
+      "fileName": "ТаблицыФорматирование.vb",
+      "originalPath": "C:\\Users\\FossW\\OneDrive\\Репетиторство\\ТаблицыФорматирование.vb",
+      "length": 2626,
+      "creationTimeUtc": "2024-11-18T18:59:31.7370201Z",
+      "lastWriteTimeUtc": "2024-11-18T19:32:18.0000000Z",
+      "sha256": "711dcf4c4de84d8179ee58ced575373f0de215bdf29cd201bc42596781d66239",
+      "disposition": "immutable historical source; superseded by ../GostFormatting.bas"
+    }
+  ],
+  "replacement": {
+    "fileName": "GostFormatting.bas",
+    "sha256AtIntegration": "9f83e76f0f54d900f49da889ed98fd37e3c5cac4076401bd379f485cdfa89e38",
+    "changes": [
+      "adjacent and idempotent caption detection",
+      "per-section usable figure width without upscaling",
+      "table width, repeated heading row and proofing controls",
+      "configurable caption numbering and heading normalization",
+      "English aliases for explicit COM invocation"
+    ]
+  }
+}
